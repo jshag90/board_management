@@ -30,6 +30,11 @@ public class NoticeDao {
     private final EntityManager entityManager;
     private final JPAQueryFactory jpaQueryFactory;
 
+    /**
+     * 공지사항 제목, 내용, 공지시작, 공지종료, 생성일, 수정일 저장
+     * @param requestSavePost
+     * @return
+     */
     public PostDataDto.SavedPostIdDto saveNoticeInfo(BoardVO.RequestSavePost requestSavePost) {
 
         Notice saveNotice = Notice.builder()

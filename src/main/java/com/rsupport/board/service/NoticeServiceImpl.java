@@ -13,7 +13,7 @@ import java.util.List;
 
 @Service("notice")
 @RequiredArgsConstructor
-public class NoticeStrategyServiceImpl implements BoardStrategyService {
+public class NoticeServiceImpl implements BoardService {
 
     private final NoticeDao noticeDao;
     @Override

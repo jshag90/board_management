@@ -2,7 +2,7 @@ package com.rsupport.board.controller;
 
 import com.rsupport.board.dto.ResponseResultDto;
 import com.rsupport.board.dto.PostDataDto;
-import com.rsupport.board.service.BoardStrategyService;
+import com.rsupport.board.service.BoardService;
 import com.rsupport.board.utils.BoardTypeEnum;
 import com.rsupport.board.utils.ErrorCode;
 import com.rsupport.board.vo.BoardVO;
@@ -26,7 +26,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BoardController {
 
-    private final Map<String, BoardStrategyService> boardServiceMap;
+    private final Map<String, BoardService> boardServiceMap;
 
     @PostMapping(value = "/{type}")
     public ResponseEntity<?> savePost(
