@@ -10,12 +10,12 @@ import lombok.*;
 @Builder
 @Getter
 @Setter
-public class AttachmentFiles {
+public class AttachmentFile {
 
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long idx;
+    private Long id;
 
     private String fileName; // 파일 이름 저장
 
