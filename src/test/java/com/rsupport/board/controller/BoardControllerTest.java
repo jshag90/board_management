@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.rsupport.board.service.BoardService;
 import com.rsupport.board.utils.ErrorCode;
+import com.rsupport.board.utils.SearchTypeEnum;
 import com.rsupport.board.vo.BoardVO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,12 +19,16 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -45,6 +50,8 @@ class BoardControllerTest {
 
     BoardVO.RequestSavePost requestSavePost;
 
+    BoardVO.RequestSearchPostVO requestSearchPostVO;
+
     ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
@@ -58,6 +65,15 @@ class BoardControllerTest {
                 .content("this is test content")
                 .exposureStartDateTime(LocalDateTime.parse("2025-03-18 09:00:00", formatter))
                 .exposureEndDateTime(LocalDateTime.parse("2025-03-18 11:00:00", formatter))
+                .build();
+
+        requestSearchPostVO = BoardVO.RequestSearchPostVO.builder()
+                .searchType(SearchTypeEnum.title)
+                .searchWord("")
+                .searchStartCreateDate(LocalDate.parse("2025-03-01"))
+                .searchEndCreateDate(LocalDate.parse("2025-03-19"))
+                .page(1)
+                .pageSize(10)
                 .build();
     }
 
@@ -105,6 +121,36 @@ class BoardControllerTest {
 
             //then
            verify(noticeService, times(1)).savePostAttachmentFiles(any(Long.class), any(List.class));
+            resultActions
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.returnCode").value(ErrorCode.SUCCESS.getReturnCode()));
+        }
+    }
+
+    @Nested
+    @DisplayName("/board/notice/list: 공지사항 조회")
+    class getNoticeListTest {
+        String url = "/board/notice/list";
+
+        @Test
+        @DisplayName("성공")
+        void saveNoticeAttachmentSuccess() throws Exception {
+            //given
+            MultiValueMap<String, String> requestSearchPostVOMap = new LinkedMultiValueMap<>();
+            requestSearchPostVOMap.add("searchType", requestSearchPostVO.getSearchType().toString());
+            requestSearchPostVOMap.add("searchWord", requestSearchPostVO.getSearchWord());
+            requestSearchPostVOMap.add("searchStartCreateDate", requestSearchPostVO.getSearchStartCreateDate().toString());
+            requestSearchPostVOMap.add("searchEndCreateDate", requestSearchPostVO.getSearchEndCreateDate().toString());
+            requestSearchPostVOMap.add("page", String.valueOf(requestSearchPostVO.getPage()));
+            requestSearchPostVOMap.add("pageSize", String.valueOf(requestSearchPostVO.getPageSize()));
+
+            //when
+            resultActions = mockMvc.perform(MockMvcRequestBuilders.get(url)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .queryParams(requestSearchPostVOMap));
+
+            //then
+            verify(noticeService, times(1)).getPostList(any(BoardVO.RequestSearchPostVO.class));
             resultActions
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.returnCode").value(ErrorCode.SUCCESS.getReturnCode()));
