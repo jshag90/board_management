@@ -12,4 +12,5 @@ public interface BoardService {
 
     <T> void savePostAttachmentFiles(Long postIdx, List<MultipartFile> multipartFileList) throws IOException;
 
+    <T> List<PostDataDto.GetPostListDto> getPostList(T requestSearchPostVO);
 }

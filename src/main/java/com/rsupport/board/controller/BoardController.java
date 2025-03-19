@@ -61,4 +61,20 @@ public class BoardController {
         return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ErrorCode.SUCCESS.getHttpStatus());
     }
 
+    @GetMapping(value = "/{type}/list")
+    public ResponseEntity<?> getPostList(
+            @PathVariable("type") BoardTypeEnum boardType,
+            @ModelAttribute BoardVO.RequestSearchPostVO requestSearchPostVO
+    ){
+        log.info(requestSearchPostVO.toString());
+        List<PostDataDto.GetPostListDto> postList = boardServiceMap.get(boardType.name()).getPostList(requestSearchPostVO);
+
+        ResponseResultDto<List<PostDataDto.GetPostListDto>> responseResultDto = ResponseResultDto.<List<PostDataDto.GetPostListDto>>builder()
+                .returnCode(ErrorCode.SUCCESS.getReturnCode())
+                .message(ErrorCode.SUCCESS.getMessage())
+                .data(postList)
+                .build();
+        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ErrorCode.SUCCESS.getHttpStatus());
+    }
+
 }

@@ -1,5 +1,8 @@
 package com.rsupport.board.dao;
 
+import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.rsupport.board.dto.PostDataDto;
 import com.rsupport.board.entity.AttachmentFile;
@@ -7,6 +10,7 @@ import com.rsupport.board.entity.BoardType;
 import com.rsupport.board.entity.Notice;
 import com.rsupport.board.entity.PostAttachmentFile;
 import com.rsupport.board.utils.BoardTypeEnum;
+import com.rsupport.board.utils.SearchTypeEnum;
 import com.rsupport.board.vo.BoardVO;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +23,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.querydsl.core.types.dsl.Expressions.stringTemplate;
+import static com.rsupport.board.entity.QNotice.notice;
 import static com.rsupport.board.entity.QBoardType.boardType;
 import static com.rsupport.board.entity.QAttachmentFile.attachmentFile;
 
@@ -95,4 +101,42 @@ public class NoticeDao {
                 .fetchOne();
     }
 
+    //TODO 커버링 인덱싱 적용
+    public List<PostDataDto.GetPostListDto> getNoticeList(BoardVO.RequestSearchPostVO requestSearchPostVO) {
+
+        return jpaQueryFactory.select(Projections.bean(PostDataDto.GetPostListDto.class,
+                        notice.id,
+                        notice.title,
+                        ExpressionUtils.as(
+                                stringTemplate("DATE_FORMAT({0}, '%Y-%m-%d %H:%i:%s')", notice.createDateTime), "createDateTime")
+                )).from(notice)
+                .where(getNoticeWhereQuery(requestSearchPostVO))
+                .offset(requestSearchPostVO.getOffset())
+                .limit(requestSearchPostVO.getPageSize())
+                .fetch();
+
+    }
+
+    /** TODO : 정적 팩토리 메서드 리팩터링
+     * 공지사항 생성일
+     * 검색 유형 : 제목 + 내용, 제목
+     * 검색어 조건에 맞는 where쿼리 생성
+     * @param requestSearchPostVO
+     * @return
+     */
+    private static BooleanExpression getNoticeWhereQuery(BoardVO.RequestSearchPostVO requestSearchPostVO) {
+        BooleanExpression searchWhere = null;
+        if (!requestSearchPostVO.getSearchWord().isBlank()) {
+            switch (requestSearchPostVO.getSearchType()) {
+                case title -> searchWhere = notice.title.contains(requestSearchPostVO.getSearchWord());
+                case title_content -> searchWhere = notice.title.contains(requestSearchPostVO.getSearchWord())
+                        .or(notice.content.contains(requestSearchPostVO.getSearchWord()));
+            }
+        }
+
+        LocalDateTime createStartLocalDateTime = requestSearchPostVO.getSearchStartCreateDate().atStartOfDay();
+        LocalDateTime createEndLocalDateTime = requestSearchPostVO.getSearchEndCreateDate().atTime(23, 59, 59, 999_999_999);
+        BooleanExpression createDateWhereQuery = notice.createDateTime.between(createStartLocalDateTime, createEndLocalDateTime);
+        return searchWhere == null ? createDateWhereQuery : searchWhere.and(createDateWhereQuery);
+    }
 }

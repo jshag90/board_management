@@ -29,4 +29,9 @@ public class NoticeServiceImpl implements BoardService {
         noticeDao.saveNoticeAttachmentFiles(postId, multipartFileList);
     }
 
+    @Override
+    public <T> List<PostDataDto.GetPostListDto> getPostList(T requestSearchPostVO) {
+        return noticeDao.getNoticeList((BoardVO.RequestSearchPostVO) requestSearchPostVO);
+    }
+
 }
