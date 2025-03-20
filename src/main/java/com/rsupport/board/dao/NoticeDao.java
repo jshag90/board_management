@@ -130,8 +130,14 @@ public class NoticeDao {
                 .fetchOne();
     }
 
-    //TODO 커버링 인덱싱 적용
     public List<PostDataDto.GetPostListDto> getNoticeList(BoardVO.RequestSearchPostVO requestSearchPostVO) {
+
+        List<Long> coveringIndex = jpaQueryFactory.select(notice.id).from(notice)
+                .where(getNoticeWhereQuery(requestSearchPostVO))
+                .offset(requestSearchPostVO.getOffset())
+                .limit(requestSearchPostVO.getPageSize())
+                .orderBy(notice.createDateTime.desc())
+                .fetch();
 
         return jpaQueryFactory.select(Projections.bean(PostDataDto.GetPostListDto.class,
                         notice.id,
@@ -139,9 +145,8 @@ public class NoticeDao {
                         ExpressionUtils.as(
                                 stringTemplate("DATE_FORMAT({0}, '%Y-%m-%d %H:%i:%s')", notice.createDateTime), "createDateTime")
                 )).from(notice)
-                .where(getNoticeWhereQuery(requestSearchPostVO))
-                .offset(requestSearchPostVO.getOffset())
-                .limit(requestSearchPostVO.getPageSize())
+                .where(notice.id.in(coveringIndex))
+                .orderBy(notice.createDateTime.desc())
                 .fetch();
 
     }
