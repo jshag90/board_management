@@ -27,6 +27,7 @@ import static com.querydsl.core.types.dsl.Expressions.stringTemplate;
 import static com.rsupport.board.entity.QNotice.notice;
 import static com.rsupport.board.entity.QBoardType.boardType;
 import static com.rsupport.board.entity.QAttachmentFile.attachmentFile;
+import static com.rsupport.board.entity.QPostAttachmentFile.postAttachmentFile;
 
 @Repository
 @RequiredArgsConstructor
@@ -37,20 +38,47 @@ public class NoticeDao {
     private final JPAQueryFactory jpaQueryFactory;
 
     /**
+     * TODO : 정적 팩토리 메서드 리팩터링
+     * 공지사항 생성일
+     * 검색 유형 : 제목 + 내용, 제목
+     * 검색어 조건에 맞는 where쿼리 생성
+     *
+     * @param requestSearchPostVO
+     * @return
+     */
+    private static BooleanExpression getNoticeWhereQuery(BoardVO.RequestSearchPostVO requestSearchPostVO) {
+        BooleanExpression searchWhere = null;
+        if (!requestSearchPostVO.getSearchWord().isBlank()) {
+            switch (requestSearchPostVO.getSearchType()) {
+                case title -> searchWhere = notice.title.contains(requestSearchPostVO.getSearchWord());
+                case title_content -> searchWhere = notice.title.contains(requestSearchPostVO.getSearchWord())
+                        .or(notice.content.contains(requestSearchPostVO.getSearchWord()));
+            }
+        }
+
+        LocalDateTime createStartLocalDateTime = requestSearchPostVO.getSearchStartCreateDate().atStartOfDay();
+        LocalDateTime createEndLocalDateTime = requestSearchPostVO.getSearchEndCreateDate().atTime(23, 59, 59, 999_999_999);
+        BooleanExpression createDateWhereQuery = notice.createDateTime.between(createStartLocalDateTime, createEndLocalDateTime);
+        return searchWhere == null ? createDateWhereQuery : searchWhere.and(createDateWhereQuery);
+    }
+
+    /**
      * 공지사항 제목, 내용, 공지시작, 공지종료, 생성일, 수정일 저장
+     *
      * @param requestSavePost
      * @return
      */
     public PostDataDto.SavedPostIdDto saveNoticeInfo(BoardVO.RequestSavePost requestSavePost) {
 
         Notice saveNotice = Notice.builder()
-                                  .title(requestSavePost.getTitle())
-                                  .content(requestSavePost.getContent())
-                                  .exposureStartDateTime(requestSavePost.getExposureStartDateTime())
-                                  .exposureEndDateTime(requestSavePost.getExposureEndDateTime())
-                                  .createDateTime(LocalDateTime.now())
-                                  .modifyDateTime(LocalDateTime.now())
-                                  .build();
+                .title(requestSavePost.getTitle())
+                .content(requestSavePost.getContent())
+                .exposureStartDateTime(requestSavePost.getExposureStartDateTime())
+                .exposureEndDateTime(requestSavePost.getExposureEndDateTime())
+                .createDateTime(LocalDateTime.now())
+                .modifyDateTime(LocalDateTime.now())
+                .hits(0)
+                .build();
 
         entityManager.persist(saveNotice);
         return PostDataDto.SavedPostIdDto.builder().postId(saveNotice.getId()).build();
@@ -59,6 +87,7 @@ public class NoticeDao {
     /**
      * 해당 공지사항 게시글 id에 해당하는 첨부파일 저장
      * 첨부파일 테이블이 동일한 파일명, byte[]가 있으면 insert하지 않음
+     *
      * @param postId
      * @param multipartFileList
      * @throws IOException
@@ -74,7 +103,7 @@ public class NoticeDao {
                     .build();
 
             AttachmentFile savedAttachmentFile = getSavedAttachmentFileByFileNameAndBytes(originalFilename, bytes);
-            if(savedAttachmentFile != null){
+            if (savedAttachmentFile != null) {
                 attachmentFileList.add(savedAttachmentFile);
                 continue;
             }
@@ -117,26 +146,52 @@ public class NoticeDao {
 
     }
 
-    /** TODO : 정적 팩토리 메서드 리팩터링
-     * 공지사항 생성일
-     * 검색 유형 : 제목 + 내용, 제목
-     * 검색어 조건에 맞는 where쿼리 생성
-     * @param requestSearchPostVO
-     * @return
-     */
-    private static BooleanExpression getNoticeWhereQuery(BoardVO.RequestSearchPostVO requestSearchPostVO) {
-        BooleanExpression searchWhere = null;
-        if (!requestSearchPostVO.getSearchWord().isBlank()) {
-            switch (requestSearchPostVO.getSearchType()) {
-                case title -> searchWhere = notice.title.contains(requestSearchPostVO.getSearchWord());
-                case title_content -> searchWhere = notice.title.contains(requestSearchPostVO.getSearchWord())
-                        .or(notice.content.contains(requestSearchPostVO.getSearchWord()));
-            }
+    public PostDataDto.GetPostDto getNoticePost(Long id) {
+
+        List<PostDataDto.GetAttachmentFileDto> getAttachmentFileDtoList = jpaQueryFactory.select(Projections.bean(PostDataDto.GetAttachmentFileDto.class
+                        , attachmentFile.id
+                        , attachmentFile.fileName
+                )).from(notice)
+                .innerJoin(postAttachmentFile).on(notice.id.eq(postAttachmentFile.postId))
+                .innerJoin(attachmentFile).on(postAttachmentFile.attachmentFileId.id.eq(attachmentFile.id))
+                .innerJoin(boardType).on(postAttachmentFile.boardTypeId.id.eq(boardType.id))
+                .where(boardType.name.eq(BoardTypeEnum.notice).and(notice.id.eq(id)))
+                .fetch();
+
+        PostDataDto.GetPostDto getPostDto = jpaQueryFactory.select(Projections.bean(PostDataDto.GetPostDto.class
+                        , notice.id
+                        , notice.title
+                        , notice.content
+                        , ExpressionUtils.as(
+                                stringTemplate("DATE_FORMAT({0}, '%Y-%m-%d %H:%i:%s')", notice.createDateTime), "createDateTime"
+                        )
+                        , notice.hits
+                        , notice.writer
+                )).from(notice)
+                .where(notice.id.eq(id))
+                .fetchOne();
+
+        if (getPostDto != null) {
+            getPostDto.setAttachmentFileNameList(getAttachmentFileDtoList);
         }
 
-        LocalDateTime createStartLocalDateTime = requestSearchPostVO.getSearchStartCreateDate().atStartOfDay();
-        LocalDateTime createEndLocalDateTime = requestSearchPostVO.getSearchEndCreateDate().atTime(23, 59, 59, 999_999_999);
-        BooleanExpression createDateWhereQuery = notice.createDateTime.between(createStartLocalDateTime, createEndLocalDateTime);
-        return searchWhere == null ? createDateWhereQuery : searchWhere.and(createDateWhereQuery);
+        jpaQueryFactory.update(notice).set(notice.hits, notice.hits.add(1)).where(notice.id.eq(id)).execute();
+
+        return getPostDto;
+    }
+
+    public PostDataDto.AttachmentFileDataDto downloadAttachmentFile(Long id) {
+        return jpaQueryFactory.select(Projections.bean(PostDataDto.AttachmentFileDataDto.class
+                        , attachmentFile.fileName
+                        , attachmentFile.fileData
+                )).from(attachmentFile)
+                .where(attachmentFile.id.eq(id)).fetchOne();
+    }
+
+    public void updateNotice(BoardVO.RequestUpdatePostVO requestUpdatePostVO) {
+        jpaQueryFactory.update(notice).set(notice.title, requestUpdatePostVO.getTitle())
+                .set(notice.content, requestUpdatePostVO.getContent())
+                .set(notice.modifyDateTime, LocalDateTime.now())
+                .where(notice.id.eq(requestUpdatePostVO.getId())).execute();
     }
 }

@@ -1,6 +1,8 @@
 package com.rsupport.board.service;
 
 import com.rsupport.board.dto.PostDataDto;
+import com.rsupport.board.vo.BoardVO;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -13,4 +15,10 @@ public interface BoardService {
     <T> void savePostAttachmentFiles(Long postIdx, List<MultipartFile> multipartFileList) throws IOException;
 
     <T> List<PostDataDto.GetPostListDto> getPostList(T requestSearchPostVO);
+
+    <T> PostDataDto.GetPostDto getPostData(Long id);
+
+    void downloadAttachmentFile(HttpServletResponse response, Long id);
+
+    void updatePost(BoardVO.RequestUpdatePostVO requestUpdatePostVO);
 }

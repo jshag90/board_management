@@ -2,8 +2,7 @@ package com.rsupport.board.dto;
 
 import lombok.*;
 
-import java.time.LocalDateTime;
-
+import java.util.List;
 public class PostDataDto {
 
     @Getter
@@ -29,5 +28,40 @@ public class PostDataDto {
         String writer;
     }
 
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class GetPostDto {
+        Long id;
+        String title;
+        String content;
+        String createDateTime;
+        int hits;
+        String writer;
+        List<GetAttachmentFileDto> attachmentFileNameList;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class GetAttachmentFileDto {
+        Long id;
+        String fileName;
+    }
+
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class AttachmentFileDataDto {
+        String fileName;
+        byte[] fileData;
+    }
 
 }

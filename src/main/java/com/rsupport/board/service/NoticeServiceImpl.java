@@ -2,7 +2,9 @@ package com.rsupport.board.service;
 
 import com.rsupport.board.dao.NoticeDao;
 import com.rsupport.board.dto.PostDataDto;
+import com.rsupport.board.utils.FileUtil;
 import com.rsupport.board.vo.BoardVO;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,5 +35,24 @@ public class NoticeServiceImpl implements BoardService {
     public <T> List<PostDataDto.GetPostListDto> getPostList(T requestSearchPostVO) {
         return noticeDao.getNoticeList((BoardVO.RequestSearchPostVO) requestSearchPostVO);
     }
+
+    @Override
+    @Transactional
+    public <T> PostDataDto.GetPostDto getPostData(Long id) {
+        return noticeDao.getNoticePost(id);
+    }
+
+    @Override
+    public void downloadAttachmentFile(HttpServletResponse response, Long id) {
+        PostDataDto.AttachmentFileDataDto attachmentFileDataDto = noticeDao.downloadAttachmentFile(id);
+        byte[] fileData = attachmentFileDataDto.getFileData();
+        FileUtil.responseFileDownload(response, attachmentFileDataDto.getFileName(), fileData);
+    }
+
+    @Override
+    public void updatePost(BoardVO.RequestUpdatePostVO requestUpdatePostVO) {
+        noticeDao.updateNotice(requestUpdatePostVO);
+    }
+
 
 }

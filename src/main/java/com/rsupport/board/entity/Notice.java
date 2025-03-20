@@ -32,4 +32,9 @@ public class Notice {
 
     private LocalDateTime modifyDateTime;
 
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private Integer hits;
+
+    private String writer;
+
 }

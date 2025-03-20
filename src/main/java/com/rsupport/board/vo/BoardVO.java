@@ -65,5 +65,21 @@ public class BoardVO {
         }
     }
 
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    @ToString
+    public static class RequestUpdatePostVO{
+
+        Long id;
+
+        String title;
+
+        String content;
+
+    }
+
 
 }
