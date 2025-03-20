@@ -105,7 +105,7 @@ public class BoardController {
         boardServiceMap.get(boardType.name()).downloadAttachmentFile(response, id);
     }
 
-    @Operation(summary = "게시판 게시글을 제목, 내용 수정", description = "게시판 게시글 제목, 내용을 수정합니다.")
+    @Operation(summary = "게시판 게시글의 제목, 내용 수정", description = "게시판 게시글 제목, 내용을 수정합니다.")
     @PutMapping(value = "/{type}")
     public ResponseEntity<?> updatePost(@PathVariable("type") BoardTypeEnum boardType,
                      @RequestBody BoardVO.RequestUpdatePostVO requestUpdatePostVO
@@ -116,6 +116,24 @@ public class BoardController {
                 .returnCode(ErrorCode.SUCCESS.getReturnCode())
                 .message(ErrorCode.SUCCESS.getMessage())
                 .build();
+        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ErrorCode.SUCCESS.getHttpStatus());
+    }
+
+    @Operation(summary = "게시판 첨부파일 목록 수정", description = "게시판 첨부파일들의 목록을 수정합니다.")
+    @PutMapping(value = "/{type}/attachment-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> putAttachmentFiles(
+            @PathVariable("type") BoardTypeEnum boardType,
+            @RequestParam("postId") @Positive Long postId,
+            @RequestParam("removeAttachmentFileId") List<Long> removeAttachmentFileIdList,
+            @RequestPart List<MultipartFile> multipartFileList
+    ) throws IOException {
+
+        boardServiceMap.get(boardType.name()).putAttachmentFiles(postId, removeAttachmentFileIdList, multipartFileList);
+        ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
+                .returnCode(ErrorCode.SUCCESS.getReturnCode())
+                .message(ErrorCode.SUCCESS.getMessage())
+                .build();
+
         return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ErrorCode.SUCCESS.getHttpStatus());
     }
 

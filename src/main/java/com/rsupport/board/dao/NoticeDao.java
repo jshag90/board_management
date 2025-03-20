@@ -199,4 +199,17 @@ public class NoticeDao {
                 .set(notice.modifyDateTime, LocalDateTime.now())
                 .where(notice.id.eq(requestUpdatePostVO.getId())).execute();
     }
+
+    public void removeAttachmentFile(Long postId, List<Long> removeAttachmentFileIdList) {
+        jpaQueryFactory.delete(postAttachmentFile)
+                .where(postAttachmentFile.attachmentFileId.id.in(removeAttachmentFileIdList)
+                .and(postAttachmentFile.postId.eq(postId)));
+
+        //해당 첨부파일을 매핑하고 있는 게시물이 없을 경우
+        for (Long attachmentFileId : removeAttachmentFileIdList) {
+            if (jpaQueryFactory.selectFrom(postAttachmentFile).where(postAttachmentFile.attachmentFileId.id.eq(attachmentFileId)).fetch().size() < 1) {
+                jpaQueryFactory.delete(attachmentFile).where(attachmentFile.id.in(removeAttachmentFileIdList));
+            }
+        }
+    }
 }
