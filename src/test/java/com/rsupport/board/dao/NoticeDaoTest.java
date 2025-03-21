@@ -13,4 +13,32 @@ class NoticeDaoTest {
     @Test
     void saveNoticeAttachmentFiles() {
     }
+
+    @Test
+    void getNoticeList() {
+    }
+
+    @Test
+    void getNoticePost() {
+    }
+
+    @Test
+    void updateNoticeHits() {
+    }
+
+    @Test
+    void downloadAttachmentFile() {
+    }
+
+    @Test
+    void updateNotice() {
+    }
+
+    @Test
+    void deleteAttachmentFile() {
+    }
+
+    @Test
+    void deleteNoticeById() {
+    }
 }
