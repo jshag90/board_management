@@ -118,7 +118,8 @@ public class NoticeDao {
                         notice.id,
                         notice.title,
                         ExpressionUtils.as(getCreateDateFormatSubQuery(notice.createDateTime), "createDateTime"),
-                        ExpressionUtils.as(isExistAttachmentFiles, "isExistAttachmentFiles")
+                        ExpressionUtils.as(isExistAttachmentFiles, "isExistAttachmentFiles"),
+                        notice.writer
                 ))
                 .from(notice)
                 .where(notice.id.in(coveringIndex))
