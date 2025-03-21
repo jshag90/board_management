@@ -58,8 +58,14 @@ public class NoticeServiceImpl implements BoardService {
     @Override
     @Transactional
     public void putAttachmentFiles(Long postId, List<Long> removeAttachmentFileIdList, List<MultipartFile> multipartFileList) throws IOException {
-        noticeDao.removeAttachmentFile(postId, removeAttachmentFileIdList);
+        noticeDao.deleteAttachmentFile(postId, removeAttachmentFileIdList);
         noticeDao.saveNoticeAttachmentFiles(postId, multipartFileList);
+    }
+
+    @Override
+    @Transactional
+    public void deletePostById(Long postId) {
+        noticeDao.deleteNoticeById(postId);
     }
 
 

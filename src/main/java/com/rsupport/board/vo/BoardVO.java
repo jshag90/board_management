@@ -2,6 +2,7 @@ package com.rsupport.board.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.rsupport.board.utils.SearchTypeEnum;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.*;

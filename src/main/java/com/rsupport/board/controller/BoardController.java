@@ -138,5 +138,19 @@ public class BoardController {
     }
 
     //TODO 게시글 삭제 API
+    @DeleteMapping(value = "/{type}")
+    public ResponseEntity<?> deletePostById(
+            @PathVariable("type") BoardTypeEnum boardType,
+            @RequestParam("postId") @Positive Long postId
+    ){
+
+        boardServiceMap.get(boardType.name()).deletePostById(postId);
+        ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
+                .returnCode(ErrorCode.SUCCESS.getReturnCode())
+                .message(ErrorCode.SUCCESS.getMessage())
+                .build();
+
+        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ErrorCode.SUCCESS.getHttpStatus());
+    }
 
 }

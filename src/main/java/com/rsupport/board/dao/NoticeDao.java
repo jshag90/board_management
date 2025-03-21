@@ -57,9 +57,15 @@ public class NoticeDao {
             }
         }
 
+        BooleanExpression createDateWhereQuery;
+        //생성일 검색 조건이 없을 경우
+        if (requestSearchPostVO.getSearchStartCreateDate() == null || requestSearchPostVO.getSearchEndCreateDate() == null) {
+            return searchWhere;
+        }
+
         LocalDateTime createStartLocalDateTime = requestSearchPostVO.getSearchStartCreateDate().atStartOfDay();
         LocalDateTime createEndLocalDateTime = requestSearchPostVO.getSearchEndCreateDate().atTime(23, 59, 59, 999_999_999);
-        BooleanExpression createDateWhereQuery = notice.createDateTime.between(createStartLocalDateTime, createEndLocalDateTime);
+        createDateWhereQuery = notice.createDateTime.between(createStartLocalDateTime, createEndLocalDateTime);
         return searchWhere == null ? createDateWhereQuery : searchWhere.and(createDateWhereQuery);
     }
 
@@ -152,6 +158,7 @@ public class NoticeDao {
                 .where(notice.id.in(coveringIndex))
                 .orderBy(notice.createDateTime.desc())
                 .fetch();
+
     }
 
 
@@ -204,16 +211,27 @@ public class NoticeDao {
                 .where(notice.id.eq(requestUpdatePostVO.getId())).execute();
     }
 
-    public void removeAttachmentFile(Long postId, List<Long> removeAttachmentFileIdList) {
+    public void deleteAttachmentFile(Long postId, List<Long> removeAttachmentFileIdList) {
         jpaQueryFactory.delete(postAttachmentFile)
                 .where(postAttachmentFile.attachmentFileId.id.in(removeAttachmentFileIdList)
-                .and(postAttachmentFile.postId.eq(postId))).execute();
+                .and(postAttachmentFile.postId.eq(postId))
+                .and(postAttachmentFile.boardTypeId.name.eq(BoardTypeEnum.notice))).execute();
 
-        //해당 첨부파일을 매핑하고 있는 게시물이 없을 경우
+        //해당 첨부파일을 매핑하고 있는 게시물이 없을 경우 첨부파일 엔티티에서 삭제
         for (Long attachmentFileId : removeAttachmentFileIdList) {
             if (jpaQueryFactory.selectFrom(postAttachmentFile).where(postAttachmentFile.attachmentFileId.id.eq(attachmentFileId)).fetch().size() < 1) {
                 jpaQueryFactory.delete(attachmentFile).where(attachmentFile.id.in(removeAttachmentFileIdList)).execute();
             }
         }
+    }
+
+    public void deleteNoticeById(Long postId) {
+        jpaQueryFactory.delete(notice).where(notice.id.eq(postId)).execute();
+        List<Long> postAttachmentFileIdList = jpaQueryFactory.select(postAttachmentFile.attachmentFileId.id)
+                                                             .from(postAttachmentFile)
+                                                             .where(postAttachmentFile.postId.eq(postId)
+                                                                     .and(postAttachmentFile.boardTypeId.name.eq(BoardTypeEnum.notice)))
+                                                             .fetch();
+        deleteAttachmentFile(postId, postAttachmentFileIdList);
     }
 }

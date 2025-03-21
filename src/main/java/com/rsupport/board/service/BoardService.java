@@ -23,4 +23,6 @@ public interface BoardService {
     void updatePost(BoardVO.RequestUpdatePostVO requestUpdatePostVO);
 
     void putAttachmentFiles(Long postId, List<Long> removeAttachmentFileIdList, List<MultipartFile> multipartFileList) throws IOException;
+
+    void deletePostById(Long postId);
 }
