@@ -66,6 +66,7 @@ public class BoardVO {
         @Size(min=1)
         int page;
 
+        @JsonIgnore
         public int getOffset(){
             return (getPage()-1) * getPageSize();
         }
