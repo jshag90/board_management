@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Map;
 import java.util.List;
 
@@ -70,7 +71,7 @@ public class BoardController {
     public ResponseEntity<?> getPostList(
             @PathVariable("type") BoardTypeEnum boardType,
             @ModelAttribute BoardVO.RequestSearchPostVO requestSearchPostVO
-    ) {
+    ) throws ParseException {
         log.info(requestSearchPostVO.toString());
         List<PostDataDto.GetPostListDto> postList = boardServiceMap.get(boardType.name()).getPostList(requestSearchPostVO);
 

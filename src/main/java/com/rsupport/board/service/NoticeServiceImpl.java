@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 
 @Service("notice")
@@ -32,7 +33,7 @@ public class NoticeServiceImpl implements BoardService {
     }
 
     @Override
-    public <T> List<PostDataDto.GetPostListDto> getPostList(T requestSearchPostVO) {
+    public <T> List<PostDataDto.GetPostListDto> getPostList(T requestSearchPostVO) throws ParseException {
         return noticeDao.getNoticeList((BoardVO.RequestSearchPostVO) requestSearchPostVO);
     }
 

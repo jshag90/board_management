@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 
 public interface BoardService {
@@ -14,7 +15,7 @@ public interface BoardService {
 
     <T> void savePostAttachmentFiles(Long postIdx, List<MultipartFile> multipartFileList) throws IOException;
 
-    <T> List<PostDataDto.GetPostListDto> getPostList(T requestSearchPostVO);
+    <T> List<PostDataDto.GetPostListDto> getPostList(T requestSearchPostVO) throws ParseException;
 
     <T> PostDataDto.GetPostDto getPostData(Long id);
 

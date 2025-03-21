@@ -1,6 +1,7 @@
 package com.rsupport.board.dao;
 
 import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.StringTemplate;
@@ -12,6 +13,7 @@ import com.rsupport.board.entity.BoardType;
 import com.rsupport.board.entity.Notice;
 import com.rsupport.board.entity.PostAttachmentFile;
 import com.rsupport.board.utils.BoardTypeEnum;
+import com.rsupport.board.utils.SubQueryFactory;
 import com.rsupport.board.vo.BoardVO;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,36 +41,6 @@ public class NoticeDao {
     private final EntityManager entityManager;
     private final JPAQueryFactory jpaQueryFactory;
 
-    /**
-     * TODO : 정적 팩토리 메서드 리팩터링
-     * 공지사항 생성일
-     * 검색 유형 : 제목 + 내용, 제목
-     * 검색어 조건에 맞는 where쿼리 생성
-     *
-     * @param requestSearchPostVO
-     * @return
-     */
-    private static BooleanExpression getNoticeWhereQuery(BoardVO.RequestSearchPostVO requestSearchPostVO) {
-        BooleanExpression searchWhere = null;
-        if (!requestSearchPostVO.getSearchWord().isBlank()) {
-            switch (requestSearchPostVO.getSearchType()) {
-                case title -> searchWhere = notice.title.contains(requestSearchPostVO.getSearchWord());
-                case title_content -> searchWhere = notice.title.contains(requestSearchPostVO.getSearchWord())
-                        .or(notice.content.contains(requestSearchPostVO.getSearchWord()));
-            }
-        }
-
-        BooleanExpression createDateWhereQuery;
-        //생성일 검색 조건이 없을 경우
-        if (requestSearchPostVO.getSearchStartCreateDate() == null || requestSearchPostVO.getSearchEndCreateDate() == null) {
-            return searchWhere;
-        }
-
-        LocalDateTime createStartLocalDateTime = requestSearchPostVO.getSearchStartCreateDate().atStartOfDay();
-        LocalDateTime createEndLocalDateTime = requestSearchPostVO.getSearchEndCreateDate().atTime(23, 59, 59, 999_999_999);
-        createDateWhereQuery = notice.createDateTime.between(createStartLocalDateTime, createEndLocalDateTime);
-        return searchWhere == null ? createDateWhereQuery : searchWhere.and(createDateWhereQuery);
-    }
 
     /**
      * 공지사항 제목, 내용, 공지시작, 공지종료, 생성일, 수정일 저장
@@ -137,10 +110,10 @@ public class NoticeDao {
                 .fetchOne();
     }
 
-    public List<PostDataDto.GetPostListDto> getNoticeList(BoardVO.RequestSearchPostVO requestSearchPostVO) {
+    public List<PostDataDto.GetPostListDto> getNoticeList(BoardVO.RequestSearchPostVO requestSearchPostVO) throws ParseException {
 
         List<Long> coveringIndex = jpaQueryFactory.select(notice.id).from(notice)
-                .where(getNoticeWhereQuery(requestSearchPostVO))
+                .where(SubQueryFactory.from(requestSearchPostVO).getWhereQuery())
                 .offset(requestSearchPostVO.getOffset())
                 .limit(requestSearchPostVO.getPageSize())
                 .orderBy(notice.createDateTime.desc())
@@ -214,8 +187,8 @@ public class NoticeDao {
     public void deleteAttachmentFile(Long postId, List<Long> removeAttachmentFileIdList) {
         jpaQueryFactory.delete(postAttachmentFile)
                 .where(postAttachmentFile.attachmentFileId.id.in(removeAttachmentFileIdList)
-                .and(postAttachmentFile.postId.eq(postId))
-                .and(postAttachmentFile.boardTypeId.name.eq(BoardTypeEnum.notice))).execute();
+                        .and(postAttachmentFile.postId.eq(postId))
+                        .and(postAttachmentFile.boardTypeId.name.eq(BoardTypeEnum.notice))).execute();
 
         for (Long attachmentFileId : removeAttachmentFileIdList) {
             if (!isExistsAttachmentFileIdMapping(attachmentFileId)) {
@@ -226,10 +199,11 @@ public class NoticeDao {
 
     /**
      * 해당 첨부파일 ID를 매핑하고 있는 게시물이 있는지 여부
+     *
      * @param attachmentFileId
      * @return
      */
-    public boolean isExistsAttachmentFileIdMapping(Long attachmentFileId){
+    public boolean isExistsAttachmentFileIdMapping(Long attachmentFileId) {
         return jpaQueryFactory
                 .selectOne()
                 .from(postAttachmentFile)
@@ -240,10 +214,10 @@ public class NoticeDao {
     public void deleteNoticeById(Long postId) {
         jpaQueryFactory.delete(notice).where(notice.id.eq(postId)).execute();
         List<Long> postAttachmentFileIdList = jpaQueryFactory.select(postAttachmentFile.attachmentFileId.id)
-                                                             .from(postAttachmentFile)
-                                                             .where(postAttachmentFile.postId.eq(postId)
-                                                                     .and(postAttachmentFile.boardTypeId.name.eq(BoardTypeEnum.notice)))
-                                                             .fetch();
+                .from(postAttachmentFile)
+                .where(postAttachmentFile.postId.eq(postId)
+                        .and(postAttachmentFile.boardTypeId.name.eq(BoardTypeEnum.notice)))
+                .fetch();
         deleteAttachmentFile(postId, postAttachmentFileIdList);
     }
 
