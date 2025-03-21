@@ -3,6 +3,8 @@ package com.rsupport.board.dao;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.StringTemplate;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.rsupport.board.dto.PostDataDto;
 import com.rsupport.board.entity.AttachmentFile;
@@ -10,7 +12,6 @@ import com.rsupport.board.entity.BoardType;
 import com.rsupport.board.entity.Notice;
 import com.rsupport.board.entity.PostAttachmentFile;
 import com.rsupport.board.utils.BoardTypeEnum;
-import com.rsupport.board.utils.SearchTypeEnum;
 import com.rsupport.board.vo.BoardVO;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -139,17 +140,20 @@ public class NoticeDao {
                 .orderBy(notice.createDateTime.desc())
                 .fetch();
 
+        StringTemplate createDateFormatSubQuery = stringTemplate("DATE_FORMAT({0}, '%Y-%m-%d %H:%i:%s')", notice.createDateTime);
+        BooleanExpression isExistAttachmentFiles = JPAExpressions.select(postAttachmentFile.id).from(postAttachmentFile).where(postAttachmentFile.postId.eq(notice.id)).exists();
         return jpaQueryFactory.select(Projections.bean(PostDataDto.GetPostListDto.class,
                         notice.id,
                         notice.title,
-                        ExpressionUtils.as(
-                                stringTemplate("DATE_FORMAT({0}, '%Y-%m-%d %H:%i:%s')", notice.createDateTime), "createDateTime")
-                )).from(notice)
+                        ExpressionUtils.as(createDateFormatSubQuery, "createDateTime"),
+                        ExpressionUtils.as(isExistAttachmentFiles, "isExistAttachmentFiles")
+                ))
+                .from(notice)
                 .where(notice.id.in(coveringIndex))
                 .orderBy(notice.createDateTime.desc())
                 .fetch();
-
     }
+
 
     public PostDataDto.GetPostDto getNoticePost(Long id) {
 
