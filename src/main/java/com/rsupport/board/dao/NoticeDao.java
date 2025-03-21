@@ -1,6 +1,5 @@
 package com.rsupport.board.dao;
 
-import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -31,7 +30,7 @@ import static com.rsupport.board.entity.QBoardType.boardType;
 import static com.rsupport.board.entity.QAttachmentFile.attachmentFile;
 import static com.rsupport.board.entity.QPostAttachmentFile.postAttachmentFile;
 import static com.rsupport.board.utils.SubQueryUtil.*;
-import static com.rsupport.board.utils.SubQueryUtil.getCreateDateFormatSubQuery;
+import static com.rsupport.board.utils.SubQueryUtil.getDateTimeFormatSubQuery;
 
 @Repository
 @RequiredArgsConstructor
@@ -119,19 +118,21 @@ public class NoticeDao {
                 .where(WhereSubQueryFactoryUtil.from(requestSearchPostVO).getWhereQuery())
                 .offset(requestSearchPostVO.getOffset())
                 .limit(requestSearchPostVO.getPageSize())
-                .orderBy(notice.createDateTime.desc())
+                .orderBy(notice.exposureStartDateTime.asc())
                 .fetch();
 
         return jpaQueryFactory.select(Projections.bean(PostDataDto.GetPostListDto.class,
                         notice.id,
                         notice.title,
-                        ExpressionUtils.as(getCreateDateFormatSubQuery(notice.createDateTime), "createDateTime"),
+                        ExpressionUtils.as(getDateTimeFormatSubQuery(notice.createDateTime), "createDateTime"),
+                        ExpressionUtils.as(getDateTimeFormatSubQuery(notice.exposureStartDateTime), "exposureStartDateTime"),
+                        ExpressionUtils.as(getDateTimeFormatSubQuery(notice.exposureEndDateTime), "exposureEndDateTime"),
                         ExpressionUtils.as(getIsExistAttachmentFilesQuery(), "isExistAttachmentFiles"),
                         notice.writer
                 ))
                 .from(notice)
                 .where(notice.id.in(coveringIndex))
-                .orderBy(notice.createDateTime.desc())
+                .orderBy(notice.exposureStartDateTime.asc())
                 .fetch();
     }
 
@@ -157,7 +158,7 @@ public class NoticeDao {
                         , notice.id
                         , notice.title
                         , notice.content
-                        , ExpressionUtils.as(getCreateDateFormatSubQuery(notice.createDateTime), "createDateTime")
+                        , ExpressionUtils.as(getDateTimeFormatSubQuery(notice.createDateTime), "createDateTime")
                         , notice.hits
                         , notice.writer
                 )).from(notice)

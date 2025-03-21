@@ -5,7 +5,6 @@ import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.rsupport.board.entity.AttachmentFile;
 
-import java.sql.Date;
 import java.time.LocalDateTime;
 
 import static com.querydsl.core.types.dsl.Expressions.stringTemplate;
@@ -42,7 +41,7 @@ public class SubQueryUtil {
                 .fetchOne();
     }
 
-    public static StringTemplate getCreateDateFormatSubQuery(DateTimePath<LocalDateTime> createDateTime){
+    public static StringTemplate getDateTimeFormatSubQuery(DateTimePath<LocalDateTime> createDateTime){
         return stringTemplate("DATE_FORMAT({0}, '%Y-%m-%d %H:%i:%s')", createDateTime);
     }
 

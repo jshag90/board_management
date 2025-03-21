@@ -48,7 +48,11 @@ public class WhereSubQueryFactoryUtil {
         LocalDateTime createStartLocalDateTime = requestSearchPostVO.getSearchStartCreateDate().atStartOfDay();
         LocalDateTime createEndLocalDateTime = requestSearchPostVO.getSearchEndCreateDate().atTime(23, 59, 59, 999_999_999);
         createDateWhereQuery = notice.createDateTime.between(createStartLocalDateTime, createEndLocalDateTime);
-        return searchWhere == null ? createDateWhereQuery : searchWhere.and(createDateWhereQuery);
+
+        BooleanExpression exposureDateWhereQuery = notice.exposureStartDateTime.loe(LocalDateTime.now())
+                                                     .and(notice.exposureEndDateTime.goe(LocalDateTime.now()));
+
+        return searchWhere == null ? createDateWhereQuery.and(exposureDateWhereQuery) : searchWhere.and(createDateWhereQuery).and(exposureDateWhereQuery);
     }
 
 

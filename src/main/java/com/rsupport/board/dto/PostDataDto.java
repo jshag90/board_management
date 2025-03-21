@@ -24,9 +24,10 @@ public class PostDataDto {
         String title;
         Boolean isExistAttachmentFiles;
         String createDateTime;
+        String exposureStartDateTime;
+        String exposureEndDateTime;
         int hits;
         String writer;
-        Boolean isExposurePost;
     }
 
     @Getter
