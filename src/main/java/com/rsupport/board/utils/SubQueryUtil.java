@@ -1,10 +1,11 @@
 package com.rsupport.board.utils;
 
-import com.querydsl.core.types.dsl.DateTimePath;
-import com.querydsl.core.types.dsl.StringTemplate;
+import com.querydsl.core.types.dsl.*;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.rsupport.board.entity.AttachmentFile;
 
+import java.sql.Date;
 import java.time.LocalDateTime;
 
 import static com.querydsl.core.types.dsl.Expressions.stringTemplate;
@@ -12,7 +13,7 @@ import static com.rsupport.board.entity.QAttachmentFile.attachmentFile;
 import static com.rsupport.board.entity.QNotice.notice;
 import static com.rsupport.board.entity.QPostAttachmentFile.postAttachmentFile;
 
-public class CommonSubQueryUtil {
+public class SubQueryUtil {
 
     /**
      * 해당 첨부파일 ID를 매핑하고 있는 게시물이 있는지 여부
@@ -44,5 +45,13 @@ public class CommonSubQueryUtil {
     public static StringTemplate getCreateDateFormatSubQuery(DateTimePath<LocalDateTime> createDateTime){
         return stringTemplate("DATE_FORMAT({0}, '%Y-%m-%d %H:%i:%s')", createDateTime);
     }
+
+    public static BooleanExpression getIsExistAttachmentFilesQuery(){
+        return JPAExpressions.select(postAttachmentFile.id)
+                .from(postAttachmentFile)
+                .where(postAttachmentFile.postId.eq(notice.id))
+                .exists();
+    }
+
 
 }

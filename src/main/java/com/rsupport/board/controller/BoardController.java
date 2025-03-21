@@ -72,7 +72,7 @@ public class BoardController {
             @PathVariable("type") BoardTypeEnum boardType,
             @ModelAttribute BoardVO.RequestSearchPostVO requestSearchPostVO
     ) throws ParseException {
-        log.info(requestSearchPostVO.toString());
+
         List<PostDataDto.GetPostListDto> postList = boardServiceMap.get(boardType.name()).getPostList(requestSearchPostVO);
 
         ResponseResultDto<List<PostDataDto.GetPostListDto>> responseResultDto = ResponseResultDto.<List<PostDataDto.GetPostListDto>>builder()
@@ -80,6 +80,7 @@ public class BoardController {
                 .message(ErrorCode.SUCCESS.getMessage())
                 .data(postList)
                 .build();
+
         return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ErrorCode.SUCCESS.getHttpStatus());
     }
 
@@ -138,7 +139,6 @@ public class BoardController {
         return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ErrorCode.SUCCESS.getHttpStatus());
     }
 
-    //TODO 게시글 삭제 API
     @DeleteMapping(value = "/{type}")
     public ResponseEntity<?> deletePostById(
             @PathVariable("type") BoardTypeEnum boardType,

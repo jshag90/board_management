@@ -15,12 +15,12 @@ import static com.rsupport.board.entity.QNotice.notice;
 @Setter
 @Getter
 @AllArgsConstructor
-public class SubQueryFactoryUtil {
+public class WhereSubQueryFactoryUtil {
 
     private Predicate whereQuery;
 
-    public static SubQueryFactoryUtil from(BoardVO.RequestSearchPostVO requestSearchPostVO) throws ParseException {
-        return new SubQueryFactoryUtil(getNoticeWhereQuery(requestSearchPostVO));
+    public static WhereSubQueryFactoryUtil from(BoardVO.RequestSearchPostVO requestSearchPostVO) throws ParseException {
+        return new WhereSubQueryFactoryUtil(getNoticeWhereQuery(requestSearchPostVO));
     }
 
     /**

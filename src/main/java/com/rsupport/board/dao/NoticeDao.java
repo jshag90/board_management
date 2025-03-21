@@ -1,9 +1,8 @@
 package com.rsupport.board.dao;
 
+import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Projections;
-import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.rsupport.board.dto.PostDataDto;
 import com.rsupport.board.entity.AttachmentFile;
@@ -11,11 +10,13 @@ import com.rsupport.board.entity.BoardType;
 import com.rsupport.board.entity.Notice;
 import com.rsupport.board.entity.PostAttachmentFile;
 import com.rsupport.board.utils.BoardTypeEnum;
-import com.rsupport.board.utils.SubQueryFactoryUtil;
+import com.rsupport.board.utils.WhereSubQueryFactoryUtil;
 import com.rsupport.board.vo.BoardVO;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,8 +30,8 @@ import static com.rsupport.board.entity.QNotice.notice;
 import static com.rsupport.board.entity.QBoardType.boardType;
 import static com.rsupport.board.entity.QAttachmentFile.attachmentFile;
 import static com.rsupport.board.entity.QPostAttachmentFile.postAttachmentFile;
-import static com.rsupport.board.utils.CommonSubQueryUtil.*;
-import static com.rsupport.board.utils.CommonSubQueryUtil.getCreateDateFormatSubQuery;
+import static com.rsupport.board.utils.SubQueryUtil.*;
+import static com.rsupport.board.utils.SubQueryUtil.getCreateDateFormatSubQuery;
 
 @Repository
 @RequiredArgsConstructor
@@ -46,6 +47,7 @@ public class NoticeDao {
      * @param requestSavePost
      * @return
      */
+    @CacheEvict(value = "noticeListCache", allEntries = true)
     public PostDataDto.SavedPostIdDto saveNoticeInfo(BoardVO.RequestSavePost requestSavePost) {
 
         Notice saveNotice = Notice.builder()
@@ -71,6 +73,7 @@ public class NoticeDao {
      * @param multipartFileList
      * @throws IOException
      */
+    @CacheEvict(value = "noticeListCache", allEntries = true)
     public void saveNoticeAttachmentFiles(Long postId, List<MultipartFile> multipartFileList) throws IOException {
         List<AttachmentFile> attachmentFileList = new ArrayList<>();
         for (MultipartFile multipartFile : multipartFileList) {
@@ -102,23 +105,28 @@ public class NoticeDao {
 
     }
 
+    /**
+     * 공지사항 목록 검색
+     * @param requestSearchPostVO
+     * @return
+     * @throws ParseException
+     */
 
-
+    @Cacheable(value = "noticeListCache", key = "#requestSearchPostVO")
     public List<PostDataDto.GetPostListDto> getNoticeList(BoardVO.RequestSearchPostVO requestSearchPostVO) throws ParseException {
 
         List<Long> coveringIndex = jpaQueryFactory.select(notice.id).from(notice)
-                .where(SubQueryFactoryUtil.from(requestSearchPostVO).getWhereQuery())
+                .where(WhereSubQueryFactoryUtil.from(requestSearchPostVO).getWhereQuery())
                 .offset(requestSearchPostVO.getOffset())
                 .limit(requestSearchPostVO.getPageSize())
                 .orderBy(notice.createDateTime.desc())
                 .fetch();
 
-        BooleanExpression isExistAttachmentFiles = JPAExpressions.select(postAttachmentFile.id).from(postAttachmentFile).where(postAttachmentFile.postId.eq(notice.id)).exists();
         return jpaQueryFactory.select(Projections.bean(PostDataDto.GetPostListDto.class,
                         notice.id,
                         notice.title,
                         ExpressionUtils.as(getCreateDateFormatSubQuery(notice.createDateTime), "createDateTime"),
-                        ExpressionUtils.as(isExistAttachmentFiles, "isExistAttachmentFiles"),
+                        ExpressionUtils.as(getIsExistAttachmentFilesQuery(), "isExistAttachmentFiles"),
                         notice.writer
                 ))
                 .from(notice)
@@ -127,7 +135,12 @@ public class NoticeDao {
                 .fetch();
     }
 
-
+    /**
+     * 특정 공지사항 글 조회
+     * @param id
+     * @return
+     */
+    @Cacheable(value = "noticePostDataCache", key = "#id")
     public PostDataDto.GetPostDto getNoticePost(Long id) {
 
         List<PostDataDto.GetAttachmentFileDto> getAttachmentFileDtoList = jpaQueryFactory.select(Projections.bean(PostDataDto.GetAttachmentFileDto.class
@@ -154,12 +167,22 @@ public class NoticeDao {
         if (getPostDto != null) {
             getPostDto.setAttachmentFileNameList(getAttachmentFileDtoList);
         }
-
-        jpaQueryFactory.update(notice).set(notice.hits, notice.hits.add(1)).where(notice.id.eq(id)).execute();
-
         return getPostDto;
     }
 
+    /**
+     * 조회수 갱신
+     * @param postId
+     */
+    public void updateNoticeHits(Long postId){
+        jpaQueryFactory.update(notice).set(notice.hits, notice.hits.add(1)).where(notice.id.eq(postId)).execute();
+    }
+
+    /**
+     * 첨부파일 조회
+     * @param id
+     * @return
+     */
     public PostDataDto.AttachmentFileDataDto downloadAttachmentFile(Long id) {
         return jpaQueryFactory.select(Projections.bean(PostDataDto.AttachmentFileDataDto.class
                         , attachmentFile.fileName
@@ -168,6 +191,11 @@ public class NoticeDao {
                 .where(attachmentFile.id.eq(id)).fetchOne();
     }
 
+    /**
+     * 특정 공지사항 수정
+     * @param requestUpdatePostVO
+     */
+    @CacheEvict(value = "noticePostDataCache", key = "#requestUpdatePostVO.id")
     public void updateNotice(BoardVO.RequestUpdatePostVO requestUpdatePostVO) {
         jpaQueryFactory.update(notice).set(notice.title, requestUpdatePostVO.getTitle())
                 .set(notice.content, requestUpdatePostVO.getContent())
@@ -175,6 +203,12 @@ public class NoticeDao {
                 .where(notice.id.eq(requestUpdatePostVO.getId())).execute();
     }
 
+    /**
+     * 특정 공지사항 글 첨부파일 삭제
+     * @param postId
+     * @param removeAttachmentFileIdList
+     */
+    @CacheEvict(value = "noticePostDataCache", key = "#requestUpdatePostVO.id")
     public void deleteAttachmentFile(Long postId, List<Long> removeAttachmentFileIdList) {
         jpaQueryFactory.delete(postAttachmentFile)
                 .where(postAttachmentFile.attachmentFileId.id.in(removeAttachmentFileIdList)
@@ -188,6 +222,11 @@ public class NoticeDao {
         }
     }
 
+    /**
+     * 특정 공지사항 글 삭제
+     * @param postId
+     */
+    @CacheEvict(value = "noticePostDataCache", key = "#postId")
     public void deleteNoticeById(Long postId) {
         jpaQueryFactory.delete(notice).where(notice.id.eq(postId)).execute();
 

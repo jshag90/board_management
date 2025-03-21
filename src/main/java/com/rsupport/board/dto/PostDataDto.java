@@ -22,10 +22,11 @@ public class PostDataDto {
     public static class GetPostListDto {
         Long id;
         String title;
-        boolean isExistAttachmentFiles;
+        Boolean isExistAttachmentFiles;
         String createDateTime;
         int hits;
         String writer;
+        Boolean isExposurePost;
     }
 
     @Getter

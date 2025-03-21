@@ -46,6 +46,7 @@ public class NoticeServiceImpl implements BoardService {
     @Override
     @Transactional
     public <T> PostDataDto.GetPostDto getPostData(Long id) {
+        noticeDao.updateNoticeHits(id);
         return noticeDao.getNoticePost(id);
     }
 
