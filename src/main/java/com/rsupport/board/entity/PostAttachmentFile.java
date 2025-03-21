@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table
+@Table(indexes = {
+        @Index(name = "idx_post_attachment_board_post", columnList = "boardTypeId, postId")
+})
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -19,7 +21,7 @@ public class PostAttachmentFile {
     private Long postId;
 
     @ManyToOne(targetEntity = BoardType.class, fetch = FetchType.LAZY)
-    @JoinColumn(name="boardTypeId")
+    @JoinColumn(name = "boardTypeId")
     private BoardType boardTypeId;
 
     @ManyToOne(targetEntity = AttachmentFile.class, fetch = FetchType.LAZY)

@@ -1,6 +1,7 @@
 package com.rsupport.board.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.rsupport.board.utils.SearchTypeEnum;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
@@ -18,6 +19,7 @@ public class BoardVO {
     @AllArgsConstructor
     @NoArgsConstructor
     @Builder
+    @ToString
     public static class RequestSavePost {
         String title;
         String content;
@@ -29,6 +31,9 @@ public class BoardVO {
         @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
         LocalDateTime exposureEndDateTime; //공지(노출) 종료 일시
+
+        @JsonIgnore
+        String writer;
     }
 
 

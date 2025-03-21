@@ -1,10 +1,8 @@
 package com.rsupport.board.dao;
 
 import com.querydsl.core.types.ExpressionUtils;
-import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.StringTemplate;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.rsupport.board.dto.PostDataDto;
@@ -13,7 +11,7 @@ import com.rsupport.board.entity.BoardType;
 import com.rsupport.board.entity.Notice;
 import com.rsupport.board.entity.PostAttachmentFile;
 import com.rsupport.board.utils.BoardTypeEnum;
-import com.rsupport.board.utils.SubQueryFactory;
+import com.rsupport.board.utils.SubQueryFactoryUtil;
 import com.rsupport.board.vo.BoardVO;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -27,11 +25,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.querydsl.core.types.dsl.Expressions.stringTemplate;
 import static com.rsupport.board.entity.QNotice.notice;
 import static com.rsupport.board.entity.QBoardType.boardType;
 import static com.rsupport.board.entity.QAttachmentFile.attachmentFile;
 import static com.rsupport.board.entity.QPostAttachmentFile.postAttachmentFile;
+import static com.rsupport.board.utils.CommonSubQueryUtil.*;
+import static com.rsupport.board.utils.CommonSubQueryUtil.getCreateDateFormatSubQuery;
 
 @Repository
 @RequiredArgsConstructor
@@ -40,7 +39,6 @@ public class NoticeDao {
 
     private final EntityManager entityManager;
     private final JPAQueryFactory jpaQueryFactory;
-
 
     /**
      * 공지사항 제목, 내용, 공지시작, 공지종료, 생성일, 수정일 저장
@@ -57,6 +55,7 @@ public class NoticeDao {
                 .exposureEndDateTime(requestSavePost.getExposureEndDateTime())
                 .createDateTime(LocalDateTime.now())
                 .modifyDateTime(LocalDateTime.now())
+                .writer(requestSavePost.getWriter())
                 .hits(0)
                 .build();
 
@@ -82,7 +81,7 @@ public class NoticeDao {
                     .fileData(bytes)
                     .build();
 
-            AttachmentFile savedAttachmentFile = getSavedAttachmentFileByFileNameAndBytes(originalFilename, bytes);
+            AttachmentFile savedAttachmentFile = getSavedAttachmentFileByFileNameAndBytes(jpaQueryFactory, originalFilename, bytes);
             if (savedAttachmentFile != null) {
                 attachmentFileList.add(savedAttachmentFile);
                 continue;
@@ -101,37 +100,30 @@ public class NoticeDao {
             entityManager.persist(savePostAttachmentFile);
         }
 
-        entityManager.flush();
     }
 
-    private AttachmentFile getSavedAttachmentFileByFileNameAndBytes(String originalFilename, byte[] bytes) {
-        return jpaQueryFactory.selectFrom(attachmentFile)
-                .where(attachmentFile.fileName.eq(originalFilename).and(attachmentFile.fileData.eq(bytes)))
-                .fetchOne();
-    }
+
 
     public List<PostDataDto.GetPostListDto> getNoticeList(BoardVO.RequestSearchPostVO requestSearchPostVO) throws ParseException {
 
         List<Long> coveringIndex = jpaQueryFactory.select(notice.id).from(notice)
-                .where(SubQueryFactory.from(requestSearchPostVO).getWhereQuery())
+                .where(SubQueryFactoryUtil.from(requestSearchPostVO).getWhereQuery())
                 .offset(requestSearchPostVO.getOffset())
                 .limit(requestSearchPostVO.getPageSize())
                 .orderBy(notice.createDateTime.desc())
                 .fetch();
 
-        StringTemplate createDateFormatSubQuery = stringTemplate("DATE_FORMAT({0}, '%Y-%m-%d %H:%i:%s')", notice.createDateTime);
         BooleanExpression isExistAttachmentFiles = JPAExpressions.select(postAttachmentFile.id).from(postAttachmentFile).where(postAttachmentFile.postId.eq(notice.id)).exists();
         return jpaQueryFactory.select(Projections.bean(PostDataDto.GetPostListDto.class,
                         notice.id,
                         notice.title,
-                        ExpressionUtils.as(createDateFormatSubQuery, "createDateTime"),
+                        ExpressionUtils.as(getCreateDateFormatSubQuery(notice.createDateTime), "createDateTime"),
                         ExpressionUtils.as(isExistAttachmentFiles, "isExistAttachmentFiles")
                 ))
                 .from(notice)
                 .where(notice.id.in(coveringIndex))
                 .orderBy(notice.createDateTime.desc())
                 .fetch();
-
     }
 
 
@@ -151,9 +143,7 @@ public class NoticeDao {
                         , notice.id
                         , notice.title
                         , notice.content
-                        , ExpressionUtils.as(
-                                stringTemplate("DATE_FORMAT({0}, '%Y-%m-%d %H:%i:%s')", notice.createDateTime), "createDateTime"
-                        )
+                        , ExpressionUtils.as(getCreateDateFormatSubQuery(notice.createDateTime), "createDateTime")
                         , notice.hits
                         , notice.writer
                 )).from(notice)
@@ -191,28 +181,15 @@ public class NoticeDao {
                         .and(postAttachmentFile.boardTypeId.name.eq(BoardTypeEnum.notice))).execute();
 
         for (Long attachmentFileId : removeAttachmentFileIdList) {
-            if (!isExistsAttachmentFileIdMapping(attachmentFileId)) {
+            if (!isExistsAttachmentFileIdMapping(jpaQueryFactory, attachmentFileId)) {
                 jpaQueryFactory.delete(attachmentFile).where(attachmentFile.id.in(removeAttachmentFileIdList)).execute();
             }
         }
     }
 
-    /**
-     * 해당 첨부파일 ID를 매핑하고 있는 게시물이 있는지 여부
-     *
-     * @param attachmentFileId
-     * @return
-     */
-    public boolean isExistsAttachmentFileIdMapping(Long attachmentFileId) {
-        return jpaQueryFactory
-                .selectOne()
-                .from(postAttachmentFile)
-                .where(postAttachmentFile.attachmentFileId.id.eq(attachmentFileId))
-                .fetchFirst() != null;
-    }
-
     public void deleteNoticeById(Long postId) {
         jpaQueryFactory.delete(notice).where(notice.id.eq(postId)).execute();
+
         List<Long> postAttachmentFileIdList = jpaQueryFactory.select(postAttachmentFile.attachmentFileId.id)
                 .from(postAttachmentFile)
                 .where(postAttachmentFile.postId.eq(postId)
