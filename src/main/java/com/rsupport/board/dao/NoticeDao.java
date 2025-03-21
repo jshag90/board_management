@@ -217,12 +217,24 @@ public class NoticeDao {
                 .and(postAttachmentFile.postId.eq(postId))
                 .and(postAttachmentFile.boardTypeId.name.eq(BoardTypeEnum.notice))).execute();
 
-        //해당 첨부파일을 매핑하고 있는 게시물이 없을 경우 첨부파일 엔티티에서 삭제
         for (Long attachmentFileId : removeAttachmentFileIdList) {
-            if (jpaQueryFactory.selectFrom(postAttachmentFile).where(postAttachmentFile.attachmentFileId.id.eq(attachmentFileId)).fetch().size() < 1) {
+            if (!isExistsAttachmentFileIdMapping(attachmentFileId)) {
                 jpaQueryFactory.delete(attachmentFile).where(attachmentFile.id.in(removeAttachmentFileIdList)).execute();
             }
         }
+    }
+
+    /**
+     * 해당 첨부파일 ID를 매핑하고 있는 게시물이 있는지 여부
+     * @param attachmentFileId
+     * @return
+     */
+    public boolean isExistsAttachmentFileIdMapping(Long attachmentFileId){
+        return jpaQueryFactory
+                .selectOne()
+                .from(postAttachmentFile)
+                .where(postAttachmentFile.attachmentFileId.id.eq(attachmentFileId))
+                .fetchFirst() != null;
     }
 
     public void deleteNoticeById(Long postId) {
@@ -234,4 +246,5 @@ public class NoticeDao {
                                                              .fetch();
         deleteAttachmentFile(postId, postAttachmentFileIdList);
     }
+
 }
