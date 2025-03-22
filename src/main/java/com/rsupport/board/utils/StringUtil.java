@@ -1,7 +1,10 @@
 package com.rsupport.board.utils;
 
+import com.rsupport.board.exception.CustomException;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
 
 public class StringUtil {
 
@@ -17,6 +20,12 @@ public class StringUtil {
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
             return null;
+        }
+    }
+
+    public static void validStartDateTimeEndDateTime(LocalDateTime startDateTime, LocalDateTime endDateTime){
+        if(!startDateTime.isBefore(endDateTime)){
+            throw new CustomException(ReturnCode.NO_INVALID_ORDER_LOCAL_DATE_TIME);
         }
     }
 }

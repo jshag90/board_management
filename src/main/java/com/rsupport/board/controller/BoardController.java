@@ -4,7 +4,8 @@ import com.rsupport.board.dto.ResponseResultDto;
 import com.rsupport.board.dto.PostDataDto;
 import com.rsupport.board.service.BoardService;
 import com.rsupport.board.utils.BoardTypeEnum;
-import com.rsupport.board.utils.ErrorCode;
+import com.rsupport.board.utils.ReturnCode;
+import com.rsupport.board.utils.StringUtil;
 import com.rsupport.board.vo.BoardVO;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletResponse;
@@ -35,18 +36,20 @@ public class BoardController {
     @Operation(summary = "게시판 글 등록", description = "게시판의 글을 등록합니다.")
     public ResponseEntity<?> savePost(
             @PathVariable("type") BoardTypeEnum boardTypeEnum,
-            @RequestBody @Valid BoardVO.RequestSavePost requestSavePost
+            @Valid @RequestBody BoardVO.RequestSavePost requestSavePost
     ) {
+
+        StringUtil.validStartDateTimeEndDateTime(requestSavePost.getExposureStartDateTime(), requestSavePost.getExposureEndDateTime());
 
         PostDataDto.SavedPostIdDto savedPostIdDto = boardServiceMap.get(boardTypeEnum.name()).savePost(requestSavePost);
 
         ResponseResultDto<PostDataDto.SavedPostIdDto> responseResultDto = ResponseResultDto.<PostDataDto.SavedPostIdDto>builder()
-                .returnCode(ErrorCode.SUCCESS.getReturnCode())
-                .message(ErrorCode.SUCCESS.getMessage())
+                .returnCode(ReturnCode.SUCCESS.getReturnCode())
+                .message(ReturnCode.SUCCESS.getMessage())
                 .data(savedPostIdDto)
                 .build();
 
-        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ErrorCode.SUCCESS.getHttpStatus());
+        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ReturnCode.SUCCESS.getHttpStatus());
     }
 
     @Operation(summary = "게시판 첨부파일 등록", description = "게시판의 첨부파일을 등록합니다.")
@@ -59,11 +62,11 @@ public class BoardController {
 
         boardServiceMap.get(boardType.name()).savePostAttachmentFiles(postId, multipartFileList);
         ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
-                .returnCode(ErrorCode.SUCCESS.getReturnCode())
-                .message(ErrorCode.SUCCESS.getMessage())
+                .returnCode(ReturnCode.SUCCESS.getReturnCode())
+                .message(ReturnCode.SUCCESS.getMessage())
                 .build();
 
-        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ErrorCode.SUCCESS.getHttpStatus());
+        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ReturnCode.SUCCESS.getHttpStatus());
     }
 
     @Operation(summary = "게시판 목록 조회", description = "게시판 목록을 조회합니다.")
@@ -76,12 +79,12 @@ public class BoardController {
         List<PostDataDto.GetPostListDto> postList = boardServiceMap.get(boardType.name()).getPostList(requestSearchPostVO);
 
         ResponseResultDto<List<PostDataDto.GetPostListDto>> responseResultDto = ResponseResultDto.<List<PostDataDto.GetPostListDto>>builder()
-                .returnCode(ErrorCode.SUCCESS.getReturnCode())
-                .message(ErrorCode.SUCCESS.getMessage())
+                .returnCode(ReturnCode.SUCCESS.getReturnCode())
+                .message(ReturnCode.SUCCESS.getMessage())
                 .data(postList)
                 .build();
 
-        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ErrorCode.SUCCESS.getHttpStatus());
+        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ReturnCode.SUCCESS.getHttpStatus());
     }
 
     @Operation(summary = "게시판 게시글 조회", description = "게시판 게시글을 조회합니다.")
@@ -91,11 +94,11 @@ public class BoardController {
             @RequestParam("id") Long id
     ) {
         ResponseResultDto<PostDataDto.GetPostDto> responseResultDto = ResponseResultDto.<PostDataDto.GetPostDto>builder()
-                .returnCode(ErrorCode.SUCCESS.getReturnCode())
-                .message(ErrorCode.SUCCESS.getMessage())
+                .returnCode(ReturnCode.SUCCESS.getReturnCode())
+                .message(ReturnCode.SUCCESS.getMessage())
                 .data(boardServiceMap.get(boardType.name()).getPostData(id))
                 .build();
-        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ErrorCode.SUCCESS.getHttpStatus());
+        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ReturnCode.SUCCESS.getHttpStatus());
     }
 
     @Operation(summary = "게시판 게시글 첨부파일 다운로드", description = "게시판 게시글 첨부파일을 다운로드 합니다.")
@@ -115,10 +118,10 @@ public class BoardController {
         boardServiceMap.get(boardType.name()).updatePost(requestUpdatePostVO);
 
         ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
-                .returnCode(ErrorCode.SUCCESS.getReturnCode())
-                .message(ErrorCode.SUCCESS.getMessage())
+                .returnCode(ReturnCode.SUCCESS.getReturnCode())
+                .message(ReturnCode.SUCCESS.getMessage())
                 .build();
-        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ErrorCode.SUCCESS.getHttpStatus());
+        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ReturnCode.SUCCESS.getHttpStatus());
     }
 
     @Operation(summary = "게시판 첨부파일 목록 수정", description = "게시판 첨부파일들의 목록을 수정합니다.")
@@ -132,11 +135,11 @@ public class BoardController {
 
         boardServiceMap.get(boardType.name()).putAttachmentFiles(postId, removeAttachmentFileIdList, multipartFileList);
         ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
-                .returnCode(ErrorCode.SUCCESS.getReturnCode())
-                .message(ErrorCode.SUCCESS.getMessage())
+                .returnCode(ReturnCode.SUCCESS.getReturnCode())
+                .message(ReturnCode.SUCCESS.getMessage())
                 .build();
 
-        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ErrorCode.SUCCESS.getHttpStatus());
+        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ReturnCode.SUCCESS.getHttpStatus());
     }
 
     @DeleteMapping(value = "/{type}")
@@ -147,11 +150,11 @@ public class BoardController {
 
         boardServiceMap.get(boardType.name()).deletePostById(postId);
         ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
-                .returnCode(ErrorCode.SUCCESS.getReturnCode())
-                .message(ErrorCode.SUCCESS.getMessage())
+                .returnCode(ReturnCode.SUCCESS.getReturnCode())
+                .message(ReturnCode.SUCCESS.getMessage())
                 .build();
 
-        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ErrorCode.SUCCESS.getHttpStatus());
+        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ReturnCode.SUCCESS.getHttpStatus());
     }
 
 }

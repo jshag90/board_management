@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.rsupport.board.utils.SearchTypeEnum;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -21,15 +22,21 @@ public class BoardVO {
     @Builder
     @ToString
     public static class RequestSavePost {
+
+        @NotBlank
         String title;
+
+        @NotBlank
         String content;
 
         @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+        @NotNull
         LocalDateTime exposureStartDateTime; //공지(노출) 시작 일시
 
         @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+        @NotNull
         LocalDateTime exposureEndDateTime; //공지(노출) 종료 일시
 
         @JsonIgnore
