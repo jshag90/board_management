@@ -11,12 +11,21 @@ import lombok.*;
 @Getter
 @Setter
 public class Member {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(length = 125)
     private String loginId;
+
+    @Column(length = 64, nullable = false)
     private String password;
+
+    @Column(length = 125)
     private String username;
+
+    @Column(length = 1)
     private Role role;
 
     public enum Role {

@@ -21,6 +21,7 @@ public class BoardType {
     private Long id;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 10, nullable = false) // 최대 길이 10자로 제한
     private BoardTypeEnum name;
 
 }
