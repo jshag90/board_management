@@ -3,34 +3,40 @@ package com.rsupport.board.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.rsupport.board.service.BoardService;
-import com.rsupport.board.utils.ErrorCode;
+import com.rsupport.board.utils.ReturnCode;
 import com.rsupport.board.utils.SearchTypeEnum;
 import com.rsupport.board.vo.BoardVO;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(BoardController.class)
 class BoardControllerTest {
@@ -92,7 +98,25 @@ class BoardControllerTest {
             verify(noticeService, times(1)).savePost(any(BoardVO.RequestSavePost.class));
             resultActions
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.returnCode").value(ErrorCode.SUCCESS.getReturnCode()));
+                    .andExpect(jsonPath("$.returnCode").value(ReturnCode.SUCCESS.getReturnCode()));
+        }
+
+        @ParameterizedTest(name = "실패-올바르지 않은 파라미터 테스트({0})")
+        @MethodSource("com.rsupport.board.util.BoardControllerTestUtil#failRequestSavePostVOList")
+        void saveNoticeFailWrongParameter(String testTitle, BoardVO.RequestSavePost invalidRequestSavePostVO) throws Exception{
+
+            //given
+            String postData = objectMapper.writeValueAsString(invalidRequestSavePostVO);
+
+            //when
+            resultActions = mockMvc.perform(MockMvcRequestBuilders.post(url)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(postData));
+
+            //then
+            verify(noticeService, times(0)).savePost(any(BoardVO.RequestSavePost.class));
+            resultActions.andExpect(status().is4xxClientError());
+
         }
     }
 
@@ -118,12 +142,12 @@ class BoardControllerTest {
            verify(noticeService, times(1)).savePostAttachmentFiles(any(Long.class), any(List.class));
             resultActions
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.returnCode").value(ErrorCode.SUCCESS.getReturnCode()));
+                    .andExpect(jsonPath("$.returnCode").value(ReturnCode.SUCCESS.getReturnCode()));
         }
     }
 
     @Nested
-    @DisplayName("/board/notice/list: 공지사항 조회")
+    @DisplayName("/board/notice/list: 공지사항 목록 조회")
     class getNoticeListTest {
         String url = "/board/notice/list";
 
@@ -148,7 +172,132 @@ class BoardControllerTest {
             verify(noticeService, times(1)).getPostList(any(BoardVO.RequestSearchPostVO.class));
             resultActions
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.returnCode").value(ErrorCode.SUCCESS.getReturnCode()));
+                    .andExpect(jsonPath("$.returnCode").value(ReturnCode.SUCCESS.getReturnCode()));
         }
     }
+
+    @Nested
+    @DisplayName("/board/notice/detail: 게시판 게시글 조회")
+    class getNoticePostTest {
+        String url = "/board/notice/detail";
+
+        @Test
+        @DisplayName("성공")
+        void saveNoticeAttachmentSuccess() throws Exception {
+            //given
+            Long id = 1L;
+
+            //when
+            resultActions = mockMvc.perform(MockMvcRequestBuilders.get(url)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .queryParam("id", String.valueOf(id)));
+
+            //then
+            verify(noticeService, times(1)).getPostData(any(Long.class));
+            resultActions
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.returnCode").value(ReturnCode.SUCCESS.getReturnCode()));
+        }
+    }
+
+    @Nested
+    @DisplayName("/board/notice/attachment-file: 게시판 게시글 첨부파일 다운로드")
+    class downloadNoticeAttachmentFileTest {
+        String url = "/board/notice/attachment-file";
+
+        @Test
+        @DisplayName("성공")
+        void downloadNoticeAttachmentFileSuccess() throws Exception {
+            //given
+            Long id = 1L;
+
+            //when
+            resultActions = mockMvc.perform(MockMvcRequestBuilders.get(url)
+                    .param("id", String.valueOf(id))
+                    .accept(MediaType.APPLICATION_OCTET_STREAM));
+
+            //then
+            verify(noticeService, times(1)).downloadAttachmentFile(any(HttpServletResponse.class), any(Long.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("/board/notice: 게시판 게시글의 제목, 내용 수정")
+    class updatePostTest {
+        String url = "/board/notice";
+
+        BoardVO.RequestUpdatePostVO requestUpdatePostVO;
+        @BeforeEach
+        void setUp(){
+            requestUpdatePostVO = BoardVO.RequestUpdatePostVO.builder()
+                    .title("This is Update title.")
+                    .content("This is Update content.")
+                    .build();
+        }
+
+        @Test
+        @DisplayName("성공")
+        void updatePostSuccess() throws Exception {
+            //given
+            String postData = objectMapper.writeValueAsString(requestUpdatePostVO);
+
+            //when
+            resultActions = mockMvc.perform(MockMvcRequestBuilders.put(url)
+                            .contentType(MediaType.APPLICATION_JSON_VALUE)
+                            .content(postData));
+
+            //then
+            verify(noticeService, times(1)).updatePost(any(BoardVO.RequestUpdatePostVO.class));
+            resultActions
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.returnCode").value(ReturnCode.SUCCESS.getReturnCode()));
+
+        }
+    }
+
+    @Nested
+    @DisplayName("/board/notice/attachment-file:게시판 첨부파일 목록 수정")
+    class updatePostAttachmentFileTest {
+        String url = "/board/notice/attachment-file";
+
+
+        @Test
+        @DisplayName("성공: 게시판 첨부파일 목록 수정")
+        void updatePostAttachmentFileSuccess() throws Exception {
+            //TODO 게시판 첨부파일 목록 수정 테스트 코드 작성
+
+        }
+
+
+    }
+
+    @Nested
+    @DisplayName("/board/notice:게시판 삭제")
+    class deletePostByIdTest {
+        String url = "/board/notice";
+
+
+        @Test
+        @DisplayName("성공: 게시판 삭제")
+        void deletePostByIdTestSuccess() throws Exception {
+            // given
+            Long postId = 1L;
+
+            // when
+            ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.delete(url)
+                    .param("postId", String.valueOf(postId))
+                    .contentType(MediaType.APPLICATION_JSON));
+
+            // then
+            verify(noticeService, times(1)).deletePostById(postId);
+            resultActions
+                    .andExpect(status().isOk())  // Check if the status is OK (200)
+                    .andExpect(jsonPath("$.returnCode").value(ReturnCode.SUCCESS.getReturnCode()));
+
+        }
+
+
+    }
+
+
 }
