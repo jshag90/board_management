@@ -236,7 +236,7 @@ class BoardControllerTest {
         }
 
         @ParameterizedTest(name = "실패-올바르지 않은 파라미터 테스트({0})")
-        @MethodSource("com.rsupport.board.util.BoardControllerTestUtil#failGetNoticePostDetailFailWrongParameter")
+        @MethodSource("com.rsupport.board.util.BoardControllerTestUtil#failSingleIdFailWrongParameter")
         void getNoticeListFailWrongParameter(String testTitle,  Long id) throws Exception{
 
             //when
@@ -274,7 +274,7 @@ class BoardControllerTest {
         }
 
         @ParameterizedTest(name = "실패-올바르지 않은 파라미터 테스트({0})")
-        @MethodSource("com.rsupport.board.util.BoardControllerTestUtil#failDownloadNoticeAttachmentFileWrongParameter")
+        @MethodSource("com.rsupport.board.util.BoardControllerTestUtil#failSingleIdFailWrongParameter")
         void downloadNoticeAttachmentFileFailWrongParameter(String testTitle,  Long id) throws Exception{
 
             //when
@@ -301,6 +301,7 @@ class BoardControllerTest {
         @BeforeEach
         void setUp(){
             requestUpdatePostVO = BoardVO.RequestUpdatePostVO.builder()
+                    .id(1L)
                     .title("This is Update title.")
                     .content("This is Update content.")
                     .build();
@@ -322,6 +323,25 @@ class BoardControllerTest {
             resultActions
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.returnCode").value(ReturnCode.SUCCESS.getReturnCode()));
+
+        }
+
+        @ParameterizedTest(name = "실패-올바르지 않은 파라미터 테스트({0})")
+        @MethodSource("com.rsupport.board.util.BoardControllerTestUtil#failUpdatePostFailWrongParameter")
+        void updatePostFailWrongParameter(String testTitle, BoardVO.RequestUpdatePostVO invalidUpdatePostVO) throws Exception{
+
+            //given
+            String postData = objectMapper.writeValueAsString(invalidUpdatePostVO);
+
+            //when
+            resultActions = mockMvc.perform(MockMvcRequestBuilders.put(url)
+                    .contentType(MediaType.APPLICATION_JSON_VALUE)
+                    .content(postData));
+
+            //then
+            verify(noticeService, times(0)).updatePost(any(BoardVO.RequestUpdatePostVO.class));
+            resultActions.andExpect(status().is4xxClientError())
+                    .andExpect(jsonPath("$.returnCode").value(ReturnCode.INVALID_REQUEST_PARAMETER.getReturnCode()));
 
         }
     }
@@ -359,6 +379,31 @@ class BoardControllerTest {
 
         }
 
+        @ParameterizedTest(name = "실패-올바르지 않은 파라미터 테스트({0})")
+        @MethodSource("com.rsupport.board.util.BoardControllerTestUtil#failSingleIdFailWrongParameter")
+        void updatePostAttachmentFileFail(String testTitle, Long id) throws Exception {
+
+            //given
+            List<Long> removeAttachmentFileIdList = List.of(100L, 101L);
+            MockMultipartFile file1 = new MockMultipartFile("multipartFileList", "file1.txt", "text/plain", "content1".getBytes());
+            MockMultipartFile file2 = new MockMultipartFile("multipartFileList", "file2.txt", "text/plain", "content2".getBytes());
+
+            doNothing().when(noticeService).putAttachmentFiles(eq(id), anyList(), anyList());
+
+            //when
+            resultActions = mockMvc.perform(MockMvcRequestBuilders.multipart(HttpMethod.PUT, url)
+                    .file(file1)
+                    .file(file2)
+                    .param("postId", String.valueOf(id))
+                    .param("removeAttachmentFileId", "100", "101")
+                    .contentType(MediaType.MULTIPART_FORM_DATA));
+
+            //then
+            resultActions.andExpect(status().is4xxClientError())
+                    .andExpect(jsonPath("$.returnCode").value(ReturnCode.INVALID_REQUEST_PARAMETER.getReturnCode()));
+
+        }
+
 
     }
 
@@ -385,6 +430,22 @@ class BoardControllerTest {
                     .andExpect(status().isOk())  // Check if the status is OK (200)
                     .andExpect(jsonPath("$.returnCode").value(ReturnCode.SUCCESS.getReturnCode()));
 
+        }
+
+        @ParameterizedTest(name = "실패-올바르지 않은 파라미터 테스트({0})")
+        @MethodSource("com.rsupport.board.util.BoardControllerTestUtil#failSingleIdFailWrongParameter")
+        void downloadNoticeAttachmentFileFailWrongParameter(String testTitle, Long id) throws Exception{
+
+            // when
+            ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.delete(url)
+                    .param("postId", String.valueOf(id))
+                    .contentType(MediaType.APPLICATION_JSON));
+
+            // then
+            verify(noticeService, times(0)).deletePostById(id);
+            resultActions
+                    .andExpect(status().is4xxClientError())
+                    .andExpect(jsonPath("$.returnCode").value(ReturnCode.INVALID_REQUEST_PARAMETER.getReturnCode()));
         }
 
 

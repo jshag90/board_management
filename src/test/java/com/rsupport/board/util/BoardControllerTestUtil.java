@@ -138,7 +138,7 @@ public class BoardControllerTestUtil {
         );
     }
 
-    public static Stream<Arguments> failGetNoticePostDetailFailWrongParameter() {
+    public static Stream<Arguments> failSingleIdFailWrongParameter() {
         return Stream.of(
                 Arguments.arguments("id값이 음수", -1L),
                 Arguments.arguments("id값이 0", 0L),
@@ -146,11 +146,40 @@ public class BoardControllerTestUtil {
         );
     }
 
-    public static Stream<Arguments> failDownloadNoticeAttachmentFileWrongParameter() {
+    public static Stream<Arguments>  failUpdatePostFailWrongParameter(){
+
+        BoardVO.RequestUpdatePostVO minusId = BoardVO.RequestUpdatePostVO.builder()
+                .id(-1L)
+                .title("This is Update title.")
+                .content("This is Update content.")
+                .build();
+
+        BoardVO.RequestUpdatePostVO zeroId = BoardVO.RequestUpdatePostVO.builder()
+                .id(0L)
+                .title("This is Update title.")
+                .content("This is Update content.")
+                .build();
+
+        BoardVO.RequestUpdatePostVO blankTitle = BoardVO.RequestUpdatePostVO.builder()
+                .id(1L)
+                .title("")
+                .content("This is Update content.")
+                .build();
+
+        BoardVO.RequestUpdatePostVO blankContent = BoardVO.RequestUpdatePostVO.builder()
+                .id(1L)
+                .title("This is Update title.")
+                .content("")
+                .build();
+
+
         return Stream.of(
-                Arguments.arguments("id값이 음수", -1L),
-                Arguments.arguments("id값이 0", 0L),
-                Arguments.arguments("id값이 Null", null)
+                Arguments.arguments("id가 음수", minusId),
+                Arguments.arguments("id가 0", zeroId),
+                Arguments.arguments("제목공백", blankTitle),
+                Arguments.arguments("내용공백", blankContent)
         );
     }
+
+
 }
