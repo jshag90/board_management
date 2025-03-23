@@ -48,7 +48,7 @@ public class BoardVO {
     @Builder
     @EqualsAndHashCode
     @ToString
-    public static class RequestSearchPostVO{
+    public static class RequestSearchPostVO {
 
         SearchTypeEnum searchType;
 
@@ -71,8 +71,8 @@ public class BoardVO {
         int page;
 
         @JsonIgnore
-        public int getOffset(){
-            return (getPage()-1) * getPageSize();
+        public int getOffset() {
+            return (getPage() - 1) * getPageSize();
         }
     }
 
@@ -82,12 +82,17 @@ public class BoardVO {
     @NoArgsConstructor
     @Builder
     @ToString
-    public static class RequestUpdatePostVO{
+    public static class RequestUpdatePostVO {
 
+        @Positive
+        @Min(1)
         Long id;
 
+
+        @NotBlank
         String title;
 
+        @NotBlank
         String content;
 
     }

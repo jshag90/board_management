@@ -121,7 +121,7 @@ public class BoardController {
     @Operation(summary = "게시판 게시글의 제목, 내용 수정", description = "게시판 게시글 제목, 내용을 수정합니다.")
     @PutMapping(value = "/{type}")
     public ResponseEntity<?> updatePost(@PathVariable("type") BoardTypeEnum boardType,
-                     @RequestBody BoardVO.RequestUpdatePostVO requestUpdatePostVO
+                     @RequestBody @Valid BoardVO.RequestUpdatePostVO requestUpdatePostVO
     ) {
         boardServiceMap.get(boardType.name()).updatePost(requestUpdatePostVO);
 
@@ -136,7 +136,7 @@ public class BoardController {
     @PutMapping(value = "/{type}/attachment-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> putAttachmentFiles(
             @PathVariable("type") BoardTypeEnum boardType,
-            @RequestParam("postId") @Positive Long postId,
+            @RequestParam("postId") @Valid @Positive @Min(1) Long postId,
             @RequestParam(value = "removeAttachmentFileId", required = false, defaultValue = "") List<Long> removeAttachmentFileIdList,
             @RequestPart(required = false) List<MultipartFile> multipartFileList
     ) throws IOException {
@@ -153,7 +153,7 @@ public class BoardController {
     @DeleteMapping(value = "/{type}")
     public ResponseEntity<?> deletePostById(
             @PathVariable("type") BoardTypeEnum boardType,
-            @RequestParam("postId") @Positive Long postId
+            @RequestParam("postId") @Valid @Positive @Min(1) Long postId
     ){
 
         boardServiceMap.get(boardType.name()).deletePostById(postId);
