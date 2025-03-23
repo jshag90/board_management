@@ -17,22 +17,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -145,6 +140,28 @@ class BoardControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.returnCode").value(ReturnCode.SUCCESS.getReturnCode()));
         }
+
+        @ParameterizedTest(name = "실패-올바르지 않은 파라미터 테스트({0})")
+        @MethodSource("com.rsupport.board.util.BoardControllerTestUtil#failNoticeAttachmentFileWrongParameter")
+        void saveNoticeAttachmentFailWrongParameter(String testTitle, Long wrongPostId, MockMultipartFile invalidUploadAttachmentFile) throws Exception {
+
+            ResultActions resultActions;
+            if (invalidUploadAttachmentFile != null) {
+                resultActions = mockMvc.perform(MockMvcRequestBuilders.multipart(url)
+                        .file(invalidUploadAttachmentFile)
+                        .queryParam("postId", String.valueOf(wrongPostId))
+                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE));
+            } else {
+                //given when
+                resultActions = mockMvc.perform(MockMvcRequestBuilders.multipart(url)
+                        .queryParam("postId", String.valueOf(wrongPostId))
+                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE));
+            }
+
+            //then
+            verify(noticeService, times(0)).savePostAttachmentFiles(any(Long.class), any(List.class));
+            resultActions.andExpect(status().is4xxClientError());
+        }
     }
 
     @Nested
@@ -154,7 +171,7 @@ class BoardControllerTest {
 
         @Test
         @DisplayName("성공")
-        void saveNoticeAttachmentSuccess() throws Exception {
+        void getNoticeListSuccess() throws Exception {
             //given
             MultiValueMap<String, String> requestSearchPostVOMap = new LinkedMultiValueMap<>();
             requestSearchPostVOMap.add("searchType", requestSearchPostVO.getSearchType().toString());
@@ -174,6 +191,21 @@ class BoardControllerTest {
             resultActions
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.returnCode").value(ReturnCode.SUCCESS.getReturnCode()));
+        }
+
+        @ParameterizedTest(name = "실패-올바르지 않은 파라미터 테스트({0})")
+        @MethodSource("com.rsupport.board.util.BoardControllerTestUtil#failGetNoticeListFailWrongParameter")
+        void getNoticeListFailWrongParameter(String testTitle,  MultiValueMap<String, String> requestSearchPostVOMap) throws Exception{
+
+            //when
+            resultActions = mockMvc.perform(MockMvcRequestBuilders.get(url)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .queryParams(requestSearchPostVOMap));
+
+            //then
+            verify(noticeService, times(0)).getPostList(any(BoardVO.RequestSearchPostVO.class));
+            resultActions.andExpect(status().is4xxClientError());
+
         }
     }
 
@@ -277,7 +309,7 @@ class BoardControllerTest {
             resultActions = mockMvc.perform(MockMvcRequestBuilders.multipart(HttpMethod.PUT, url)
                             .file(file1)
                             .file(file2)
-                            .param("postId", postId.toString())
+                            .param("postId", String.valueOf(postId))
                             .param("removeAttachmentFileId", "100", "101")
                             .contentType(MediaType.MULTIPART_FORM_DATA));
 
