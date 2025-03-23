@@ -3,10 +3,7 @@ package com.rsupport.board.vo;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.rsupport.board.utils.SearchTypeEnum;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -66,11 +63,11 @@ public class BoardVO {
         LocalDate searchEndCreateDate;
 
         @Positive
-        @Size(min=1)
+        @Min(1)
         int pageSize;
 
         @Positive
-        @Size(min=1)
+        @Min(1)
         int page;
 
         @JsonIgnore

@@ -4,14 +4,17 @@ import com.rsupport.board.dto.ResponseResultDto;
 import com.rsupport.board.dto.PostDataDto;
 import com.rsupport.board.service.BoardService;
 import com.rsupport.board.utils.BoardTypeEnum;
+import com.rsupport.board.utils.FileUtil;
 import com.rsupport.board.utils.ReturnCode;
 import com.rsupport.board.utils.StringUtil;
 import com.rsupport.board.vo.BoardVO;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -57,9 +60,11 @@ public class BoardController {
     @PostMapping(value = "/{type}/attachment-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> saveAttachmentFiles(
             @PathVariable("type") BoardTypeEnum boardType,
-            @RequestParam("postId") @Positive @NotBlank Long postId,
+            @RequestParam("postId") @Positive @Min(1) Long postId,
             @RequestPart List<MultipartFile> multipartFileList
     ) throws IOException {
+
+        FileUtil.checkValidFileSize(multipartFileList);
 
         boardServiceMap.get(boardType.name()).savePostAttachmentFiles(postId, multipartFileList);
         ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
@@ -94,7 +99,7 @@ public class BoardController {
     @GetMapping(value = "/{type}/detail")
     public ResponseEntity<?> getPostData(
             @PathVariable("type") BoardTypeEnum boardType,
-            @RequestParam("id") Long id
+            @RequestParam("id") @Valid @Positive @Min(1) Long id
     ) {
         ResponseResultDto<PostDataDto.GetPostDto> responseResultDto = ResponseResultDto.<PostDataDto.GetPostDto>builder()
                 .returnCode(ReturnCode.SUCCESS.getReturnCode())

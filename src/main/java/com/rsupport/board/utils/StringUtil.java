@@ -26,13 +26,13 @@ public class StringUtil {
 
     public static void validOrderStartDateTimeEndDateTime(LocalDateTime startDateTime, LocalDateTime endDateTime){
         if(!startDateTime.isBefore(endDateTime)){
-            throw new CustomException(ReturnCode.NO_INVALID_ORDER_LOCAL_DATE_TIME);
+            throw new CustomException(ReturnCode.INVALID_REQUEST_PARAMETER);
         }
     }
 
     public static void validOrderStartDateEndDate(LocalDate startDateTime, LocalDate endDateTime){
         if(!startDateTime.isBefore(endDateTime)){
-            throw new CustomException(ReturnCode.NO_INVALID_ORDER_LOCAL_DATE_TIME);
+            throw new CustomException(ReturnCode.INVALID_REQUEST_PARAMETER);
         }
     }
 

@@ -7,10 +7,9 @@ import org.springframework.http.HttpStatus;
 @Getter
 @AllArgsConstructor
 public enum ReturnCode {
-    SUCCESS(0, "요청 처리에 성공하였습니다.", HttpStatus.OK)
-    , NO_INVALID_ORDER_LOCAL_DATE_TIME(-2, "시작일시, 종료일시가 순서가 올바르지 않습니다.", HttpStatus.BAD_REQUEST)
+      SUCCESS(0, "요청 처리에 성공하였습니다.", HttpStatus.OK)
     , SERVER_ERROR(-1, "서버에러", HttpStatus.INTERNAL_SERVER_ERROR)
-
+    , INVALID_REQUEST_PARAMETER(-2, "유효하지 않은 파라미터", HttpStatus.BAD_REQUEST)
     ;
 
 

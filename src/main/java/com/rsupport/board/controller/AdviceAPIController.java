@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
@@ -18,44 +19,57 @@ import org.springframework.web.multipart.support.MissingServletRequestPartExcept
 public class AdviceAPIController {
 
     @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<String> handleBadRequest(BadRequestException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    public ResponseEntity<?> handleBadRequest(BadRequestException ex) {
+        ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
+                .returnCode(ReturnCode.INVALID_REQUEST_PARAMETER.getReturnCode())
+                .message(ex.getMessage())
+                .build();
+        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ReturnCode.INVALID_REQUEST_PARAMETER.getHttpStatus());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<String> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseEntity<?> handleValidationExceptions(MethodArgumentNotValidException ex) {
         ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
-                .returnCode(ReturnCode.SERVER_ERROR.getReturnCode())
+                .returnCode(ReturnCode.INVALID_REQUEST_PARAMETER.getReturnCode())
                 .message(ex.getMessage())
                 .build();
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseResultDto.toString());
+        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ReturnCode.INVALID_REQUEST_PARAMETER.getHttpStatus());
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<String> handleMethodArgumentTypeMismatchExceptions(MethodArgumentTypeMismatchException ex) {
+    public ResponseEntity<?> handleMethodArgumentTypeMismatchExceptions(MethodArgumentTypeMismatchException ex) {
         ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
-                .returnCode(ReturnCode.SERVER_ERROR.getReturnCode())
+                .returnCode(ReturnCode.INVALID_REQUEST_PARAMETER.getReturnCode())
                 .message(ex.getMessage())
                 .build();
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseResultDto.toString());
+        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ReturnCode.INVALID_REQUEST_PARAMETER.getHttpStatus());
     }
 
     @ExceptionHandler(MissingServletRequestPartException.class)
-    public ResponseEntity<String> handleMissingServletRequestPartExceptions(MissingServletRequestPartException ex) {
+    public ResponseEntity<?> handleMissingServletRequestPartExceptions(MissingServletRequestPartException ex) {
         ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
-                .returnCode(ReturnCode.SERVER_ERROR.getReturnCode())
+                .returnCode(ReturnCode.INVALID_REQUEST_PARAMETER.getReturnCode())
                 .message(ex.getMessage())
                 .build();
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseResultDto.toString());
+        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ReturnCode.INVALID_REQUEST_PARAMETER.getHttpStatus());
     }
 
     @ExceptionHandler(UnexpectedTypeException.class)
-    public ResponseEntity<String> handleUnexpectedTypeExceptions(UnexpectedTypeException ex) {
+    public ResponseEntity<?> handleUnexpectedTypeExceptions(UnexpectedTypeException ex) {
         ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
-                .returnCode(ReturnCode.SERVER_ERROR.getReturnCode())
+                .returnCode(ReturnCode.INVALID_REQUEST_PARAMETER.getReturnCode())
                 .message(ex.getMessage())
                 .build();
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseResultDto.toString());
+        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ReturnCode.INVALID_REQUEST_PARAMETER.getHttpStatus());
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<?> handlerMethodValidationException(HandlerMethodValidationException ex) {
+        ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
+                .returnCode(ReturnCode.INVALID_REQUEST_PARAMETER.getReturnCode())
+                .message(ex.getMessage())
+                .build();
+        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ReturnCode.INVALID_REQUEST_PARAMETER.getHttpStatus());
     }
 
     @ExceptionHandler(CustomException.class)
