@@ -3,6 +3,7 @@ package com.rsupport.board.controller;
 import com.rsupport.board.dto.ResponseResultDto;
 import com.rsupport.board.exception.CustomException;
 import com.rsupport.board.utils.ReturnCode;
+import jakarta.validation.UnexpectedTypeException;
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -10,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 @ControllerAdvice
 public class AdviceAPIController {
@@ -21,6 +24,33 @@ public class AdviceAPIController {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<String> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
+                .returnCode(ReturnCode.SERVER_ERROR.getReturnCode())
+                .message(ex.getMessage())
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseResultDto.toString());
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<String> handleMethodArgumentTypeMismatchExceptions(MethodArgumentTypeMismatchException ex) {
+        ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
+                .returnCode(ReturnCode.SERVER_ERROR.getReturnCode())
+                .message(ex.getMessage())
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseResultDto.toString());
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<String> handleMissingServletRequestPartExceptions(MissingServletRequestPartException ex) {
+        ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
+                .returnCode(ReturnCode.SERVER_ERROR.getReturnCode())
+                .message(ex.getMessage())
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseResultDto.toString());
+    }
+
+    @ExceptionHandler(UnexpectedTypeException.class)
+    public ResponseEntity<String> handleUnexpectedTypeExceptions(UnexpectedTypeException ex) {
         ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
                 .returnCode(ReturnCode.SERVER_ERROR.getReturnCode())
                 .message(ex.getMessage())
