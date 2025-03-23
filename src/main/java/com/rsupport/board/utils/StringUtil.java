@@ -4,6 +4,7 @@ import com.rsupport.board.exception.CustomException;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class StringUtil {
@@ -23,9 +24,16 @@ public class StringUtil {
         }
     }
 
-    public static void validStartDateTimeEndDateTime(LocalDateTime startDateTime, LocalDateTime endDateTime){
+    public static void validOrderStartDateTimeEndDateTime(LocalDateTime startDateTime, LocalDateTime endDateTime){
         if(!startDateTime.isBefore(endDateTime)){
             throw new CustomException(ReturnCode.NO_INVALID_ORDER_LOCAL_DATE_TIME);
         }
     }
+
+    public static void validOrderStartDateEndDate(LocalDate startDateTime, LocalDate endDateTime){
+        if(!startDateTime.isBefore(endDateTime)){
+            throw new CustomException(ReturnCode.NO_INVALID_ORDER_LOCAL_DATE_TIME);
+        }
+    }
+
 }
