@@ -16,6 +16,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -260,11 +261,31 @@ class BoardControllerTest {
     class updatePostAttachmentFileTest {
         String url = "/board/notice/attachment-file";
 
-
         @Test
         @DisplayName("성공: 게시판 첨부파일 목록 수정")
         void updatePostAttachmentFileSuccess() throws Exception {
-            //TODO 게시판 첨부파일 목록 수정 테스트 코드 작성
+
+            //given
+            Long postId = 1L;
+            List<Long> removeAttachmentFileIdList = List.of(100L, 101L);
+            MockMultipartFile file1 = new MockMultipartFile("multipartFileList", "file1.txt", "text/plain", "content1".getBytes());
+            MockMultipartFile file2 = new MockMultipartFile("multipartFileList", "file2.txt", "text/plain", "content2".getBytes());
+
+            doNothing().when(noticeService).putAttachmentFiles(eq(postId), anyList(), anyList());
+
+            //when
+            resultActions = mockMvc.perform(MockMvcRequestBuilders.multipart(HttpMethod.PUT, url)
+                            .file(file1)
+                            .file(file2)
+                            .param("postId", postId.toString())
+                            .param("removeAttachmentFileId", "100", "101")
+                            .contentType(MediaType.MULTIPART_FORM_DATA));
+
+            //then
+            resultActions.andExpect(status().isOk())
+                         .andExpect(jsonPath("$.returnCode").value(ReturnCode.SUCCESS.getReturnCode()));
+
+            verify(noticeService).putAttachmentFiles(eq(postId), eq(removeAttachmentFileIdList), anyList());
 
         }
 
