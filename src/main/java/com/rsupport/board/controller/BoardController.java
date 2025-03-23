@@ -137,8 +137,8 @@ public class BoardController {
     public ResponseEntity<?> putAttachmentFiles(
             @PathVariable("type") BoardTypeEnum boardType,
             @RequestParam("postId") @Positive Long postId,
-            @RequestParam("removeAttachmentFileId") List<Long> removeAttachmentFileIdList,
-            @RequestPart List<MultipartFile> multipartFileList
+            @RequestParam(value = "removeAttachmentFileId", required = false, defaultValue = "") List<Long> removeAttachmentFileIdList,
+            @RequestPart(required = false) List<MultipartFile> multipartFileList
     ) throws IOException {
 
         boardServiceMap.get(boardType.name()).putAttachmentFiles(postId, removeAttachmentFileIdList, multipartFileList);

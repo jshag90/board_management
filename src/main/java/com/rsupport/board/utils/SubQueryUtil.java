@@ -4,6 +4,7 @@ import com.querydsl.core.types.dsl.*;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.rsupport.board.entity.AttachmentFile;
+import com.rsupport.board.entity.BoardType;
 
 import java.time.LocalDateTime;
 
@@ -39,6 +40,12 @@ public class SubQueryUtil {
         return jpaQueryFactory.selectFrom(attachmentFile)
                 .where(attachmentFile.fileName.eq(originalFilename).and(attachmentFile.fileData.eq(bytes)))
                 .fetchOne();
+    }
+
+    public static boolean isAlreadyPostAttachmentFile(JPAQueryFactory jpaQueryFactory, Long postId, BoardType noticeBoardType, AttachmentFile attachmentFile) {
+        return jpaQueryFactory.selectOne().from(postAttachmentFile).where(postAttachmentFile.postId.eq(postId).and(postAttachmentFile
+                .attachmentFileId.eq(attachmentFile).and(postAttachmentFile.boardTypeId.eq(noticeBoardType))
+        )).fetchFirst() != null;
     }
 
     public static StringTemplate getDateTimeFormatSubQuery(DateTimePath<LocalDateTime> createDateTime){

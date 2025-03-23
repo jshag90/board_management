@@ -9,6 +9,7 @@ import com.rsupport.board.entity.BoardType;
 import com.rsupport.board.entity.Notice;
 import com.rsupport.board.entity.PostAttachmentFile;
 import com.rsupport.board.utils.BoardTypeEnum;
+import com.rsupport.board.utils.SubQueryUtil;
 import com.rsupport.board.utils.WhereSubQueryFactoryUtil;
 import com.rsupport.board.vo.BoardVO;
 import jakarta.persistence.EntityManager;
@@ -99,6 +100,11 @@ public class NoticeDao {
                     .postId(postId)
                     .boardTypeId(noticeBoardType)
                     .build();
+
+            if(SubQueryUtil.isAlreadyPostAttachmentFile(jpaQueryFactory, postId, noticeBoardType, attachmentFile)) {
+                continue;
+            }
+
             entityManager.persist(savePostAttachmentFile);
         }
 
@@ -209,7 +215,7 @@ public class NoticeDao {
      * @param postId
      * @param removeAttachmentFileIdList
      */
-    @CacheEvict(value = "noticePostDataCache", key = "#requestUpdatePostVO.id")
+    @CacheEvict(value = "noticePostDataCache", key = "#postId")
     public void deleteAttachmentFile(Long postId, List<Long> removeAttachmentFileIdList) {
         jpaQueryFactory.delete(postAttachmentFile)
                 .where(postAttachmentFile.attachmentFileId.id.in(removeAttachmentFileIdList)
