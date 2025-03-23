@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -73,7 +74,10 @@ public class NoticeDao {
      * @param multipartFileList
      * @throws IOException
      */
-    @CacheEvict(value = "noticeListCache", allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = "noticeListCache", allEntries = true),
+            @CacheEvict(value = "noticePostDataCache", key = "#postId")
+    })
     public void saveNoticeAttachmentFiles(Long postId, List<MultipartFile> multipartFileList) throws IOException {
         List<AttachmentFile> attachmentFileList = new ArrayList<>();
         for (MultipartFile multipartFile : multipartFileList) {
@@ -181,6 +185,7 @@ public class NoticeDao {
      * 조회수 갱신
      * @param postId
      */
+    @CacheEvict(value = "noticePostDataCache", key = "#postId")
     public void updateNoticeHits(Long postId){
         jpaQueryFactory.update(notice).set(notice.hits, notice.hits.add(1)).where(notice.id.eq(postId)).execute();
     }
@@ -215,7 +220,10 @@ public class NoticeDao {
      * @param postId
      * @param removeAttachmentFileIdList
      */
-    @CacheEvict(value = "noticePostDataCache", key = "#postId")
+    @Caching(evict = {
+            @CacheEvict(value = "noticeListCache", allEntries = true),
+            @CacheEvict(value = "noticePostDataCache", key = "#postId")
+    })
     public void deleteAttachmentFile(Long postId, List<Long> removeAttachmentFileIdList) {
         jpaQueryFactory.delete(postAttachmentFile)
                 .where(postAttachmentFile.attachmentFileId.id.in(removeAttachmentFileIdList)
@@ -233,7 +241,10 @@ public class NoticeDao {
      * 특정 공지사항 글 삭제
      * @param postId
      */
-    @CacheEvict(value = "noticePostDataCache", key = "#postId")
+    @Caching(evict = {
+            @CacheEvict(value = "noticeListCache", allEntries = true),
+            @CacheEvict(value = "noticePostDataCache", key = "#postId")
+    })
     public void deleteNoticeById(Long postId) {
         jpaQueryFactory.delete(notice).where(notice.id.eq(postId)).execute();
 
