@@ -10,6 +10,7 @@ import com.rsupport.board.vo.BoardVO;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +40,7 @@ public class BoardController {
             @Valid @RequestBody BoardVO.RequestSavePost requestSavePost
     ) {
 
-        StringUtil.validStartDateTimeEndDateTime(requestSavePost.getExposureStartDateTime(), requestSavePost.getExposureEndDateTime());
+        StringUtil.validOrderStartDateTimeEndDateTime(requestSavePost.getExposureStartDateTime(), requestSavePost.getExposureEndDateTime());
 
         PostDataDto.SavedPostIdDto savedPostIdDto = boardServiceMap.get(boardTypeEnum.name()).savePost(requestSavePost);
 
@@ -56,7 +57,7 @@ public class BoardController {
     @PostMapping(value = "/{type}/attachment-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> saveAttachmentFiles(
             @PathVariable("type") BoardTypeEnum boardType,
-            @RequestParam("postId") @Positive Long postId,
+            @RequestParam("postId") @Positive @NotBlank Long postId,
             @RequestPart List<MultipartFile> multipartFileList
     ) throws IOException {
 
@@ -73,8 +74,10 @@ public class BoardController {
     @GetMapping(value = "/{type}/list")
     public ResponseEntity<?> getPostList(
             @PathVariable("type") BoardTypeEnum boardType,
-            @ModelAttribute BoardVO.RequestSearchPostVO requestSearchPostVO
+            @ModelAttribute @Valid BoardVO.RequestSearchPostVO requestSearchPostVO
     ) throws ParseException {
+
+        StringUtil.validOrderStartDateEndDate(requestSearchPostVO.getSearchStartCreateDate(), requestSearchPostVO.getSearchEndCreateDate());
 
         List<PostDataDto.GetPostListDto> postList = boardServiceMap.get(boardType.name()).getPostList(requestSearchPostVO);
 
