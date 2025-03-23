@@ -111,7 +111,8 @@ class BoardControllerTest {
 
             //then
             verify(noticeService, times(0)).savePost(any(BoardVO.RequestSavePost.class));
-            resultActions.andExpect(status().is4xxClientError());
+            resultActions.andExpect(status().is4xxClientError())
+                    .andExpect(jsonPath("$.returnCode").value(ReturnCode.INVALID_REQUEST_PARAMETER.getReturnCode()));
 
         }
     }
@@ -160,7 +161,8 @@ class BoardControllerTest {
 
             //then
             verify(noticeService, times(0)).savePostAttachmentFiles(any(Long.class), any(List.class));
-            resultActions.andExpect(status().is4xxClientError());
+            resultActions.andExpect(status().is4xxClientError())
+                    .andExpect(jsonPath("$.returnCode").value(ReturnCode.INVALID_REQUEST_PARAMETER.getReturnCode()));
         }
     }
 
@@ -204,19 +206,20 @@ class BoardControllerTest {
 
             //then
             verify(noticeService, times(0)).getPostList(any(BoardVO.RequestSearchPostVO.class));
-            resultActions.andExpect(status().is4xxClientError());
+            resultActions.andExpect(status().is4xxClientError())
+                    .andExpect(jsonPath("$.returnCode").value(ReturnCode.INVALID_REQUEST_PARAMETER.getReturnCode()));
 
         }
     }
 
     @Nested
     @DisplayName("/board/notice/detail: 게시판 게시글 조회")
-    class getNoticePostTest {
+    class getNoticePostDetailTest {
         String url = "/board/notice/detail";
 
         @Test
         @DisplayName("성공")
-        void saveNoticeAttachmentSuccess() throws Exception {
+        void getNoticePostDetailTestSuccess() throws Exception {
             //given
             Long id = 1L;
 
@@ -230,6 +233,23 @@ class BoardControllerTest {
             resultActions
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.returnCode").value(ReturnCode.SUCCESS.getReturnCode()));
+        }
+
+        @ParameterizedTest(name = "실패-올바르지 않은 파라미터 테스트({0})")
+        @MethodSource("com.rsupport.board.util.BoardControllerTestUtil#failGetNoticePostDetailFailWrongParameter")
+        void getNoticeListFailWrongParameter(String testTitle,  Long id) throws Exception{
+
+            //when
+            resultActions = mockMvc.perform(MockMvcRequestBuilders.get(url)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .queryParam("id", String.valueOf(id)));
+
+            //then
+            verify(noticeService, times(0)).getPostData(any(Long.class));
+            resultActions
+                    .andExpect(status().is4xxClientError())
+                    .andExpect(jsonPath("$.returnCode").value(ReturnCode.INVALID_REQUEST_PARAMETER.getReturnCode()));
+
         }
     }
 

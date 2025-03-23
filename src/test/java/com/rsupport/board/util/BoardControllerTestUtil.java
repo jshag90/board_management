@@ -14,35 +14,35 @@ public class BoardControllerTestUtil {
 
     public static Stream<Arguments> failRequestSavePostVOList() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        BoardVO.RequestSavePost blankTitle =  BoardVO.RequestSavePost
+        BoardVO.RequestSavePost blankTitle = BoardVO.RequestSavePost
                 .builder()
                 .content("this is test content")
                 .exposureStartDateTime(LocalDateTime.parse("2025-03-18 09:00:00", formatter))
                 .exposureEndDateTime(LocalDateTime.parse("2025-03-18 11:00:00", formatter))
                 .build();
 
-        BoardVO.RequestSavePost blankContent =  BoardVO.RequestSavePost
+        BoardVO.RequestSavePost blankContent = BoardVO.RequestSavePost
                 .builder()
                 .title("this is test title")
                 .exposureStartDateTime(LocalDateTime.parse("2025-03-18 09:00:00", formatter))
                 .exposureEndDateTime(LocalDateTime.parse("2025-03-18 11:00:00", formatter))
                 .build();
 
-        BoardVO.RequestSavePost blankExposureStartDateTime =  BoardVO.RequestSavePost
+        BoardVO.RequestSavePost blankExposureStartDateTime = BoardVO.RequestSavePost
                 .builder()
                 .title("this is test title")
                 .content("this is test content")
                 .exposureEndDateTime(LocalDateTime.parse("2025-03-18 11:00:00", formatter))
                 .build();
 
-        BoardVO.RequestSavePost blankExposureEndDateTime =  BoardVO.RequestSavePost
+        BoardVO.RequestSavePost blankExposureEndDateTime = BoardVO.RequestSavePost
                 .builder()
                 .title("this is test title")
                 .content("this is test content")
                 .exposureStartDateTime(LocalDateTime.parse("2025-03-18 09:00:00", formatter))
                 .build();
 
-        BoardVO.RequestSavePost orderExposureDateTime =  BoardVO.RequestSavePost
+        BoardVO.RequestSavePost orderExposureDateTime = BoardVO.RequestSavePost
                 .builder()
                 .title("this is test title")
                 .content("this is test content")
@@ -59,7 +59,7 @@ public class BoardControllerTestUtil {
         );
     }
 
-    public static Stream<Arguments> failNoticeAttachmentFileWrongParameter(){
+    public static Stream<Arguments> failNoticeAttachmentFileWrongParameter() {
 
         MockMultipartFile uploadAttachmentFile = new MockMultipartFile(
                 "multipartFileList", "file1.txt", "text/plain", "This is a test file".getBytes());
@@ -70,14 +70,14 @@ public class BoardControllerTestUtil {
 
         return Stream.of(
                 Arguments.arguments("post id가 음수", -1L, uploadAttachmentFile),
-                Arguments.arguments("post id가 0",  0L, uploadAttachmentFile),
+                Arguments.arguments("post id가 0", 0L, uploadAttachmentFile),
                 Arguments.arguments("post id가 null", null, uploadAttachmentFile),
                 Arguments.arguments("첨부파일에 null", 1L, null),
                 Arguments.arguments("첨부파일크기가 너무 작을 경우", 1L, tooSmallUploadAttachmentFile)
         );
     }
 
-    public static  Stream<Arguments> failGetNoticeListFailWrongParameter(){
+    public static Stream<Arguments> failGetNoticeListFailWrongParameter() {
 
         MultiValueMap<String, String> invalidSearchTypeMap = new LinkedMultiValueMap<>();
         invalidSearchTypeMap.add("searchType", "content");
@@ -135,6 +135,14 @@ public class BoardControllerTestUtil {
                 Arguments.arguments("생성 시작일, 종료일 순서 바뀜", invalidOrderWrongCreateDateFormatMap),
                 Arguments.arguments("1보다 작은 페이지 요청", invalidPageMap),
                 Arguments.arguments("1보다 작은 페이지 크기 요청", invalidPageSizeMap)
+        );
+    }
+
+    public static Stream<Arguments> failGetNoticePostDetailFailWrongParameter() {
+        return Stream.of(
+                Arguments.arguments("id값이 음수", -1L),
+                Arguments.arguments("id값이 0", 0L),
+                Arguments.arguments("id값이 Null", null)
         );
     }
 }
