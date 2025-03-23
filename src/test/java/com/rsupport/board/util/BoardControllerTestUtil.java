@@ -145,4 +145,12 @@ public class BoardControllerTestUtil {
                 Arguments.arguments("id값이 Null", null)
         );
     }
+
+    public static Stream<Arguments> failDownloadNoticeAttachmentFileWrongParameter() {
+        return Stream.of(
+                Arguments.arguments("id값이 음수", -1L),
+                Arguments.arguments("id값이 0", 0L),
+                Arguments.arguments("id값이 Null", null)
+        );
+    }
 }

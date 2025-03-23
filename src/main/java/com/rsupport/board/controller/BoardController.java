@@ -112,7 +112,7 @@ public class BoardController {
     @Operation(summary = "게시판 게시글 첨부파일 다운로드", description = "게시판 게시글 첨부파일을 다운로드 합니다.")
     @GetMapping(value = "/{type}/attachment-file")
     public void downloadAttachmentFile(@PathVariable("type") BoardTypeEnum boardType,
-                                       @RequestParam("id") Long id,
+                                       @RequestParam("id") @Valid @Positive @Min(1) Long id,
                                        HttpServletResponse response
     ) {
         boardServiceMap.get(boardType.name()).downloadAttachmentFile(response, id);

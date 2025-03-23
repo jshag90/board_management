@@ -267,10 +267,28 @@ class BoardControllerTest {
             //when
             resultActions = mockMvc.perform(MockMvcRequestBuilders.get(url)
                     .param("id", String.valueOf(id))
-                    .accept(MediaType.APPLICATION_OCTET_STREAM));
+                    .accept(MediaType.APPLICATION_JSON_VALUE));
 
             //then
             verify(noticeService, times(1)).downloadAttachmentFile(any(HttpServletResponse.class), any(Long.class));
+        }
+
+        @ParameterizedTest(name = "실패-올바르지 않은 파라미터 테스트({0})")
+        @MethodSource("com.rsupport.board.util.BoardControllerTestUtil#failDownloadNoticeAttachmentFileWrongParameter")
+        void downloadNoticeAttachmentFileFailWrongParameter(String testTitle,  Long id) throws Exception{
+
+            //when
+            resultActions = mockMvc.perform(MockMvcRequestBuilders.get(url)
+                    .param("id", String.valueOf(id))
+                    .accept(MediaType.APPLICATION_JSON_VALUE));
+
+            //then
+            verify(noticeService, times(0)).downloadAttachmentFile(any(HttpServletResponse.class), any(Long.class));
+            resultActions
+                    .andExpect(status().is4xxClientError())
+                    .andExpect(jsonPath("$.returnCode").value(ReturnCode.INVALID_REQUEST_PARAMETER.getReturnCode()));
+
+
         }
     }
 
