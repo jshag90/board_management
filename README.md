@@ -31,14 +31,14 @@ Note) 로그인 기능은 추가 개발이 필요하므로 임시로 Member 테�
 
 3) 내장 톰캣 jar파일을 실행합니다.
    - profiles별로 설정파일 경로가 다릅니다.
-   
-   - 리눅스 일 경우)
+
 ```aiignore
+//리눅스 환경
  java -Dspring.profiles.active=dev -jar board-0.0.1-SNAPSHOT.jar
 ```
 
-   - windows일 경우)
 ```aiignore
+//windows 환경
  java -Dspring.profiles.active=prod -jar board-0.0.1-SNAPSHOT.jar
 ```
 
