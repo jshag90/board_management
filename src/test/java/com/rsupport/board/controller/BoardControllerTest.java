@@ -237,7 +237,7 @@ class BoardControllerTest {
 
         @ParameterizedTest(name = "실패-올바르지 않은 파라미터 테스트({0})")
         @MethodSource("com.rsupport.board.util.BoardControllerTestUtil#failSingleIdFailWrongParameter")
-        void getNoticeListFailWrongParameter(String testTitle,  Long id) throws Exception{
+        void getNoticePostDetailFailWrongParameter(String testTitle,  Long id) throws Exception{
 
             //when
             resultActions = mockMvc.perform(MockMvcRequestBuilders.get(url)
@@ -434,7 +434,7 @@ class BoardControllerTest {
 
         @ParameterizedTest(name = "실패-올바르지 않은 파라미터 테스트({0})")
         @MethodSource("com.rsupport.board.util.BoardControllerTestUtil#failSingleIdFailWrongParameter")
-        void downloadNoticeAttachmentFileFailWrongParameter(String testTitle, Long id) throws Exception{
+        void deletePostByIdFailWrongParameter(String testTitle, Long id) throws Exception{
 
             // when
             ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.delete(url)
