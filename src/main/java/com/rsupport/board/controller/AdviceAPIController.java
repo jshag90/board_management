@@ -6,8 +6,8 @@ import com.rsupport.board.utils.ReturnCode;
 import jakarta.validation.UnexpectedTypeException;
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -20,6 +20,15 @@ public class AdviceAPIController {
 
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<?> handleBadRequest(BadRequestException ex) {
+        ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
+                .returnCode(ReturnCode.INVALID_REQUEST_PARAMETER.getReturnCode())
+                .message(ex.getMessage())
+                .build();
+        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ReturnCode.INVALID_REQUEST_PARAMETER.getHttpStatus());
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<?> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
         ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
                 .returnCode(ReturnCode.INVALID_REQUEST_PARAMETER.getReturnCode())
                 .message(ex.getMessage())
@@ -85,6 +94,7 @@ public class AdviceAPIController {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleException(Exception e) {
+        e.printStackTrace();
         ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
                 .returnCode(ReturnCode.SERVER_ERROR.getReturnCode())
                 .message(ReturnCode.SERVER_ERROR.getMessage())
