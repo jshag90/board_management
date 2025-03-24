@@ -50,12 +50,31 @@ public class BoardControllerTestUtil {
                 .exposureEndDateTime(LocalDateTime.parse("2025-03-18 09:00:00", formatter))
                 .build();
 
+        DateTimeFormatter wrongFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS");
+        BoardVO.RequestSavePost notInvalidExposureStartDateTime = BoardVO.RequestSavePost
+                .builder()
+                .title("this is test title")
+                .content("this is test content")
+                .exposureStartDateTime(LocalDateTime.parse("2025-03-18 11:00:00.123123", wrongFormatter))
+                .exposureEndDateTime(LocalDateTime.parse("2025-03-18 09:00:00", formatter))
+                .build();
+
+        BoardVO.RequestSavePost notInvalidExposureEndDateTime = BoardVO.RequestSavePost
+                .builder()
+                .title("this is test title")
+                .content("this is test content")
+                .exposureStartDateTime(LocalDateTime.parse("2025-03-18 11:00:00", formatter))
+                .exposureEndDateTime(LocalDateTime.parse("2025-03-18 09:00:00.123123", wrongFormatter))
+                .build();
+
         return Stream.of(
                 Arguments.arguments("공백 제목", blankTitle),
                 Arguments.arguments("공백 내용", blankContent),
                 Arguments.arguments("공백 공지시작일시", blankExposureStartDateTime),
                 Arguments.arguments("공백 공지종료일시", blankExposureEndDateTime),
-                Arguments.arguments("공지종료일시 시작일시 순서 바뀜", orderExposureDateTime)
+                Arguments.arguments("공지종료일시 시작일시 순서 바뀜", orderExposureDateTime),
+                Arguments.arguments("공지시작일시 올바르지 않은 포맷", notInvalidExposureStartDateTime),
+                Arguments.arguments("공지종료일시 올바르지 않은 포맷", notInvalidExposureEndDateTime)
         );
     }
 
