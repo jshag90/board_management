@@ -33,6 +33,9 @@ public class FileUtil {
     }
 
     public static void checkValidFileSize(List<MultipartFile> multipartFileList){
+        if(multipartFileList == null)
+            return;
+
         long totalSize = multipartFileList.stream().mapToLong(MultipartFile::getSize).sum();
 
         if(totalSize > MAX_FILE_SIZE){
