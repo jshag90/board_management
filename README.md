@@ -24,4 +24,20 @@ Note) 로그인 기능은 추가 개발이 필요하므로 임시로 Member 테�
 공지사항 등록시 해당 계정 이름으로 등록되게 처리하였습니다.(writer)
 
 **실행 방법**
+1) db접속 정보 설정파일을 c:/rs/install.properties를 이동
+   (리눅스 : /rs/install.properties)
+
+2) 내장 톰캣 jar파일을 실행 방법
+   - profiles별로 설정파일 경로가 다릅니다.
+리눅스 일 경우
+```aiignore
+ java -Dspring.profiles.active=dev -jar board-0.0.1-SNAPSHOT.jar
+```
+
+windows일 경우
+```aiignore
+ java -Dspring.profiles.active=prod -jar board-0.0.1-SNAPSHOT.jar
+```
+
+3) API 문서 웹 화면
 스웨거 접속 주소 : http://localhost:8080/swagger-ui/index.html
