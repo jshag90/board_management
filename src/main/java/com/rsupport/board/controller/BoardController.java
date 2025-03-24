@@ -9,12 +9,14 @@ import com.rsupport.board.utils.ReturnCode;
 import com.rsupport.board.utils.StringUtil;
 import com.rsupport.board.vo.BoardVO;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -36,8 +38,16 @@ public class BoardController {
 
     private final Map<String, BoardService> boardServiceMap;
 
-    @PostMapping(value = "/{type}")
+
     @Operation(summary = "게시판 글 등록", description = "게시판의 글을 등록합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "유효하지 않은 파라미터 요청",
+                    content = @Content(schema = @Schema(implementation = ResponseResultDto.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+    @PostMapping(value = "/{type}")
     public ResponseEntity<?> savePost(
             @PathVariable("type") BoardTypeEnum boardTypeEnum,
             @Valid @RequestBody BoardVO.RequestSavePost requestSavePost
@@ -57,6 +67,13 @@ public class BoardController {
     }
 
     @Operation(summary = "게시판 첨부파일 등록", description = "게시판의 첨부파일을 등록합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "유효하지 않은 파라미터 요청",
+                    content = @Content(schema = @Schema(implementation = ResponseResultDto.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
     @PostMapping(value = "/{type}/attachment-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> saveAttachmentFiles(
             @PathVariable("type") BoardTypeEnum boardType,
@@ -76,6 +93,13 @@ public class BoardController {
     }
 
     @Operation(summary = "게시판 목록 조회", description = "게시판 목록을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "유효하지 않은 파라미터 요청",
+                    content = @Content(schema = @Schema(implementation = ResponseResultDto.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
     @GetMapping(value = "/{type}/list")
     public ResponseEntity<?> getPostList(
             @PathVariable("type") BoardTypeEnum boardType,
@@ -96,6 +120,13 @@ public class BoardController {
     }
 
     @Operation(summary = "게시판 게시글 조회", description = "게시판 게시글을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "유효하지 않은 파라미터 요청",
+                    content = @Content(schema = @Schema(implementation = ResponseResultDto.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
     @GetMapping(value = "/{type}/detail")
     public ResponseEntity<?> getPostData(
             @PathVariable("type") BoardTypeEnum boardType,
@@ -110,6 +141,13 @@ public class BoardController {
     }
 
     @Operation(summary = "게시판 게시글 첨부파일 다운로드", description = "게시판 게시글 첨부파일을 다운로드 합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "유효하지 않은 파라미터 요청",
+                    content = @Content(schema = @Schema(implementation = ResponseResultDto.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
     @GetMapping(value = "/{type}/attachment-file")
     public void downloadAttachmentFile(@PathVariable("type") BoardTypeEnum boardType,
                                        @RequestParam("id") @Valid @Positive @Min(1) Long id,
@@ -119,6 +157,13 @@ public class BoardController {
     }
 
     @Operation(summary = "게시판 게시글의 제목, 내용 수정", description = "게시판 게시글 제목, 내용을 수정합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "유효하지 않은 파라미터 요청",
+                    content = @Content(schema = @Schema(implementation = ResponseResultDto.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
     @PutMapping(value = "/{type}")
     public ResponseEntity<?> updatePost(@PathVariable("type") BoardTypeEnum boardType,
                      @RequestBody @Valid BoardVO.RequestUpdatePostVO requestUpdatePostVO
@@ -133,6 +178,13 @@ public class BoardController {
     }
 
     @Operation(summary = "게시판 첨부파일 목록 수정", description = "게시판 첨부파일들의 목록을 수정합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "유효하지 않은 파라미터 요청",
+                    content = @Content(schema = @Schema(implementation = ResponseResultDto.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
     @PutMapping(value = "/{type}/attachment-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> putAttachmentFiles(
             @PathVariable("type") BoardTypeEnum boardType,
@@ -152,6 +204,14 @@ public class BoardController {
         return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ReturnCode.SUCCESS.getHttpStatus());
     }
 
+    @Operation(summary = "게시판 삭제", description = "특정 id에 해당하는 게시글을 삭제합니다.(첨부파일포함)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "유효하지 않은 파라미터 요청",
+                    content = @Content(schema = @Schema(implementation = ResponseResultDto.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
     @DeleteMapping(value = "/{type}")
     public ResponseEntity<?> deletePostById(
             @PathVariable("type") BoardTypeEnum boardType,
