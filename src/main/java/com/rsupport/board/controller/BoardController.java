@@ -141,6 +141,8 @@ public class BoardController {
             @RequestPart(required = false) List<MultipartFile> multipartFileList
     ) throws IOException {
 
+        FileUtil.checkValidFileSize(multipartFileList);
+
         boardServiceMap.get(boardType.name()).putAttachmentFiles(postId, removeAttachmentFileIdList, multipartFileList);
         ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
                 .returnCode(ReturnCode.SUCCESS.getReturnCode())

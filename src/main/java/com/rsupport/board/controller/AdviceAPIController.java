@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 @ControllerAdvice
@@ -25,6 +26,15 @@ public class AdviceAPIController {
                 .message(ex.getMessage())
                 .build();
         return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ReturnCode.INVALID_REQUEST_PARAMETER.getHttpStatus());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<?> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex) {
+        ResponseResultDto<Void> responseResultDto = ResponseResultDto.<Void>builder()
+                .returnCode(ReturnCode.TOO_BIG_SIZE_FILE.getReturnCode())
+                .message(ex.getMessage())
+                .build();
+        return new ResponseEntity<>(responseResultDto, new HttpHeaders(), ReturnCode.TOO_BIG_SIZE_FILE.getHttpStatus());
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

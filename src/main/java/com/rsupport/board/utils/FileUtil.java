@@ -12,6 +12,8 @@ import java.util.List;
 
 public class FileUtil {
 
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
+
     public static void responseFileDownload(HttpServletResponse response, String fileName, byte[] fileData) {
         // 파일명 인코딩 (한글 파일명 깨짐 방지)
         String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replaceAll("\\+", "%20");
@@ -31,7 +33,14 @@ public class FileUtil {
     }
 
     public static void checkValidFileSize(List<MultipartFile> multipartFileList){
+        long totalSize = multipartFileList.stream().mapToLong(MultipartFile::getSize).sum();
+
+        if(totalSize > MAX_FILE_SIZE){
+            throw new CustomException(ReturnCode.TOO_BIG_SIZE_FILE);
+        }
+
         for(MultipartFile file : multipartFileList){
+
             if(file.getSize() < 1){
                 throw new CustomException(ReturnCode.INVALID_REQUEST_PARAMETER);
             }
